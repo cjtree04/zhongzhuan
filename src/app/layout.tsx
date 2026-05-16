@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
+import { NavBar } from "@/components/nav-bar";
+import { SiteFooter } from "@/components/site-footer";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,8 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "中转 Token - AI API 网关",
-  description: "一个 API Key,接入全球主流大模型。OpenAI / Claude / Gemini 统一兼容,按量计费,稳定低延迟。",
+  title: "Zhongzhuan Token — 一个 API Key,接入全球大模型",
+  description:
+    "Zhongzhuan Token 是面向开发者的 AI API 中转网关。统一兼容 OpenAI / Claude / Gemini,按量计费,稳定低延迟。",
 };
 
 export default function RootLayout({
@@ -25,9 +30,15 @@ export default function RootLayout({
   return (
     <html
       lang="zh-CN"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      data-scroll-behavior="smooth"
+      className={`${geistSans.variable} ${geistMono.variable} scroll-smooth h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <NavBar />
+        <main className="flex-1">{children}</main>
+        <SiteFooter />
+        <Toaster position="top-center" />
+      </body>
     </html>
   );
 }
