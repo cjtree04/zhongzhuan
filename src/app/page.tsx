@@ -7,6 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { HeroGlobe } from "@/components/hero-globe";
 
 const SPECS = [
   {
@@ -61,51 +62,60 @@ const FAQ = [
 export default function HomePage() {
   return (
     <>
-      {/* Hero */}
+      {/* Hero — left text / right schematic */}
       <section className="relative border-b border-border">
-        <div className="mx-auto max-w-7xl px-6 py-24 md:py-32">
-          <div className="mb-6 inline-flex items-center gap-2 border border-border bg-secondary/50 px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-            <span className="relative flex size-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-75" />
-              <span className="relative inline-flex size-1.5 rounded-full bg-brand" />
-            </span>
-            STATUS · OPERATIONAL
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-6 py-20 md:py-28 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-16">
+          <div>
+            <div className="mb-6 inline-flex items-center gap-2 border border-border bg-secondary/50 px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+              <span className="relative flex size-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-75" />
+                <span className="relative inline-flex size-1.5 rounded-full bg-brand" />
+              </span>
+              STATUS · OPERATIONAL
+            </div>
+
+            <h1 className="font-mono text-5xl font-semibold leading-[1.05] tracking-tight md:text-6xl lg:text-[64px]">
+              一个 <span className="text-brand">API Key</span>,
+              <br />
+              接入全球大模型。
+            </h1>
+
+            <p className="mt-8 max-w-xl text-base text-muted-foreground md:text-lg">
+              Zhongzhuan Token 把 OpenAI、Claude、Gemini、DeepSeek、Qwen 等 40+
+              模型统一封装成 OpenAI 兼容接口。改一行 base_url,即刻接入。
+            </p>
+
+            <div className="mt-10 flex flex-wrap items-center gap-3">
+              <Button size="lg" className="font-mono group">
+                开始使用
+                <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
+              </Button>
+              <Button size="lg" variant="outline" className="font-mono">
+                查看文档
+              </Button>
+            </div>
           </div>
 
-          <h1 className="font-mono text-5xl font-semibold leading-[1.05] tracking-tight md:text-6xl lg:text-7xl">
-            一个 <span className="text-brand">API Key</span>,
-            <br />
-            接入全球大模型。
-          </h1>
-
-          <p className="mt-8 max-w-xl text-base text-muted-foreground md:text-lg">
-            Zhongzhuan Token 把 OpenAI、Claude、Gemini、DeepSeek、Qwen 等 40+
-            模型统一封装成 OpenAI 兼容接口。改一行 base_url,即刻接入。
-          </p>
-
-          <div className="mt-10 flex flex-wrap items-center gap-3">
-            <Button size="lg" className="font-mono">
-              开始使用
-              <ArrowRight />
-            </Button>
-            <Button size="lg" variant="outline" className="font-mono">
-              查看文档
-            </Button>
+          <div className="flex items-center justify-center lg:justify-end">
+            <HeroGlobe />
           </div>
+        </div>
 
-          <div className="mt-16 grid grid-cols-2 gap-px border border-border bg-border md:grid-cols-4">
+        {/* Specs — full-width band beneath the hero */}
+        <div className="border-t border-border">
+          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px border-x border-border bg-border md:grid-cols-4">
             {SPECS.map((spec) => {
               const Icon = spec.icon;
               return (
                 <div
                   key={spec.label}
-                  className="flex flex-col gap-2 bg-background p-5"
+                  className="group flex flex-col gap-2 bg-background p-6 transition-colors hover:bg-secondary/50"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
                       {spec.label}
                     </span>
-                    <Icon className="size-4 text-brand" />
+                    <Icon className="size-4 text-brand transition-transform group-hover:-translate-y-0.5" />
                   </div>
                   <div className="font-mono text-2xl font-semibold tracking-tight">
                     {spec.value}

@@ -55,25 +55,36 @@ export function NavBar() {
           <Link
             href="/"
             onClick={handleLeftClick("scrollTop", "/")}
-            className="font-mono text-[15px] font-semibold tracking-tight text-brand select-none"
+            className="font-mono text-[15px] font-semibold tracking-tight text-brand select-none transition-transform duration-200 hover:-translate-y-px"
           >
             Zhongzhuan&nbsp;Token
           </Link>
-          <ul className="hidden items-center gap-6 md:flex">
-            {LEFT_LINKS.map((link) => (
-              <li key={link.label}>
-                <Link
-                  href={link.href}
-                  onClick={handleLeftClick(link.action, link.href)}
-                  className={cn(
-                    "font-mono text-[13px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground",
-                    onHome && link.href === "/" && "text-foreground",
-                  )}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+          <ul className="hidden items-center gap-7 md:flex">
+            {LEFT_LINKS.map((link) => {
+              const active = onHome && link.href === "/"
+              return (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    onClick={handleLeftClick(link.action, link.href)}
+                    className={cn(
+                      "group relative inline-flex items-center font-mono text-[13px] uppercase tracking-wider text-muted-foreground transition-all duration-200",
+                      "hover:-translate-y-px hover:text-brand",
+                      active && "text-foreground",
+                    )}
+                  >
+                    {link.label}
+                    <span
+                      className={cn(
+                        "pointer-events-none absolute -bottom-1.5 left-0 right-0 h-px origin-left scale-x-0 bg-brand transition-transform duration-200",
+                        "group-hover:scale-x-100",
+                      )}
+                      aria-hidden
+                    />
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
         </nav>
 
