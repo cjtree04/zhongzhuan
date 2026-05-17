@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties } from "react";
 
 import Claude from "@lobehub/icons/es/Claude";
 import DeepSeek from "@lobehub/icons/es/DeepSeek";
@@ -16,6 +16,14 @@ import Qwen from "@lobehub/icons/es/Qwen";
 import Zhipu from "@lobehub/icons/es/Zhipu";
 
 import { cn } from "@/lib/utils";
+
+// lobehub 每家 logo 的 CompoundedIcon 类型互不兼容,这里用通用 component 类型
+// 兜底 (size / className / style 都是字符串/数字,够用)。
+type IconComponent = ComponentType<{
+  size?: number | string;
+  className?: string;
+  style?: CSSProperties;
+}>;
 
 const R = 200; // globe radius in viewBox units
 const CENTER = 300; // viewBox center (canvas is 600x600)
@@ -34,10 +42,10 @@ type LogoEntry = {
   name: string;
   lat: number;
   lng: number;
-  Mono: typeof Claude;
+  Mono: IconComponent;
   // null = no brand-color variant in lobehub → hover falls back to Mono in `text-foreground`
   // which adapts to light/dark automatically.
-  Color: typeof Claude.Color | null;
+  Color: IconComponent | null;
 };
 
 const LOGOS: LogoEntry[] = [
