@@ -4,10 +4,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import Claude from "@lobehub/icons/es/Claude";
 import DeepSeek from "@lobehub/icons/es/DeepSeek";
+import Doubao from "@lobehub/icons/es/Doubao";
 import Gemini from "@lobehub/icons/es/Gemini";
 import Grok from "@lobehub/icons/es/Grok";
+import Kimi from "@lobehub/icons/es/Kimi";
+import Meta from "@lobehub/icons/es/Meta";
+import Mistral from "@lobehub/icons/es/Mistral";
 import OpenAI from "@lobehub/icons/es/OpenAI";
+import Perplexity from "@lobehub/icons/es/Perplexity";
 import Qwen from "@lobehub/icons/es/Qwen";
+import Zhipu from "@lobehub/icons/es/Zhipu";
 
 import { cn } from "@/lib/utils";
 
@@ -29,17 +35,27 @@ type LogoEntry = {
   lat: number;
   lng: number;
   Mono: typeof Claude;
-  Color: typeof Claude.Color | null; // null = fallback to Mono tinted by `brand`
-  brand: string;
+  // null = no brand-color variant in lobehub → hover falls back to Mono in `text-foreground`
+  // which adapts to light/dark automatically.
+  Color: typeof Claude.Color | null;
 };
 
 const LOGOS: LogoEntry[] = [
-  { id: "claude", name: "Claude", lat: 42, lng: -77, Mono: Claude, Color: Claude.Color, brand: "#D97757" },
-  { id: "openai", name: "OpenAI", lat: 37, lng: -122, Mono: OpenAI, Color: null, brand: "#0F0F0F" },
-  { id: "gemini", name: "Gemini", lat: 51, lng: -1, Mono: Gemini, Color: Gemini.Color, brand: "#4796E3" },
-  { id: "grok", name: "Grok", lat: -10, lng: -45, Mono: Grok, Color: null, brand: "#0F0F0F" },
-  { id: "deepseek", name: "DeepSeek", lat: 30, lng: 116, Mono: DeepSeek, Color: DeepSeek.Color, brand: "#4D6BFE" },
-  { id: "qwen", name: "Qwen", lat: -33, lng: 151, Mono: Qwen, Color: Qwen.Color, brand: "#615CED" },
+  // Claude and OpenAI clustered around the default-view center (lng ≈ +34°)
+  { id: "claude", name: "Claude", lat: 35, lng: 20, Mono: Claude, Color: Claude.Color },
+  { id: "openai", name: "OpenAI", lat: 28, lng: 38, Mono: OpenAI, Color: null },
+  // Front hemisphere spread
+  { id: "gemini", name: "Gemini", lat: 52, lng: -10, Mono: Gemini, Color: Gemini.Color },
+  { id: "mistral", name: "Mistral", lat: 50, lng: 75, Mono: Mistral, Color: Mistral.Color },
+  { id: "perplexity", name: "Perplexity", lat: 15, lng: -25, Mono: Perplexity, Color: Perplexity.Color },
+  { id: "meta", name: "Meta", lat: -15, lng: 5, Mono: Meta, Color: Meta.Color },
+  { id: "deepseek", name: "DeepSeek", lat: 5, lng: 110, Mono: DeepSeek, Color: DeepSeek.Color },
+  { id: "doubao", name: "Doubao", lat: -35, lng: 60, Mono: Doubao, Color: Doubao.Color },
+  // Back hemisphere (rotate to find)
+  { id: "kimi", name: "Kimi", lat: -25, lng: 145, Mono: Kimi, Color: Kimi.Color },
+  { id: "zhipu", name: "Zhipu", lat: 45, lng: 165, Mono: Zhipu, Color: Zhipu.Color },
+  { id: "grok", name: "Grok", lat: -5, lng: -90, Mono: Grok, Color: null },
+  { id: "qwen", name: "Qwen", lat: -45, lng: -160, Mono: Qwen, Color: Qwen.Color },
 ];
 
 type Vec3 = { x: number; y: number; z: number };
@@ -381,7 +397,7 @@ function LogoChip({
   scale: number;
   interactive: boolean;
 }) {
-  const { Mono, Color, name, brand } = logo;
+  const { Mono, Color, name } = logo;
   const iconSize = LOGO_SIZE - 10;
   return (
     <div
@@ -398,7 +414,7 @@ function LogoChip({
     >
       <Mono
         size={iconSize}
-        className="absolute text-muted-foreground/60 transition-all duration-200 group-hover/logo:opacity-0 group-hover/logo:scale-90"
+        className="absolute text-muted-foreground/70 transition-all duration-200 group-hover/logo:opacity-0 group-hover/logo:scale-90"
       />
       {Color ? (
         <Color
@@ -406,10 +422,11 @@ function LogoChip({
           className="absolute opacity-0 transition-all duration-200 group-hover/logo:opacity-100 group-hover/logo:scale-110"
         />
       ) : (
+        // No brand-color variant in lobehub (OpenAI / Grok) — use Mono in
+        // foreground color so it stays readable in both light and dark mode.
         <Mono
           size={iconSize}
-          style={{ color: brand }}
-          className="absolute opacity-0 transition-all duration-200 group-hover/logo:opacity-100 group-hover/logo:scale-110"
+          className="absolute text-foreground opacity-0 transition-all duration-200 group-hover/logo:opacity-100 group-hover/logo:scale-110"
         />
       )}
       <div className="pointer-events-none absolute top-full mt-2 origin-top scale-90 whitespace-nowrap rounded-sm border border-border bg-background/95 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-foreground opacity-0 backdrop-blur transition-all duration-200 group-hover/logo:scale-100 group-hover/logo:opacity-100">
