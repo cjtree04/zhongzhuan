@@ -3,11 +3,17 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Bell, Languages, Monitor, Moon, Sun } from "lucide-react"
+import { Bell, Check, Languages, Monitor, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 
 const LEFT_LINKS = [
@@ -22,23 +28,13 @@ export function NavBar() {
   const router = useRouter()
   const onHome = pathname === "/"
 
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, resolvedTheme } = useTheme()
   const [themeMounted, setThemeMounted] = useState(false)
   useEffect(() => setThemeMounted(true), [])
 
-  const cycleTheme = () => {
-    const next = theme === "system" ? "light" : theme === "light" ? "dark" : "system"
-    setTheme(next)
-  }
-
-  const ThemeIcon = !themeMounted ? Monitor : theme === "light" ? Sun : theme === "dark" ? Moon : Monitor
-  const themeLabel = !themeMounted
-    ? "切换主题"
-    : theme === "light"
-      ? "当前浅色,点击切到深色"
-      : theme === "dark"
-        ? "当前深色,点击跟随系统"
-        : "当前跟随系统,点击切到浅色"
+  // Trigger icon mirrors what the user actually sees right now.
+  // Before mount, render Sun as a neutral placeholder to avoid hydration jitter.
+  const TriggerIcon = !themeMounted ? Sun : resolvedTheme === "dark" ? Moon : Sun
 
   const handleLeftClick =
     (action: "scrollTop" | "navigate" | "scrollToFaq", href: string) =>
@@ -118,27 +114,57 @@ export function NavBar() {
           >
             <Bell />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label="切换语言"
-            onClick={comingSoon("语言切换")}
-            className="font-mono text-muted-foreground"
-          >
-            <Languages />
-            <span className="hidden lg:inline">中 / EN</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={themeLabel}
-            title={themeLabel}
-            onClick={cycleTheme}
-            className="text-muted-foreground"
-            suppressHydrationWarning
-          >
-            <ThemeIcon suppressHydrationWarning />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="切换语言"
+                  className="text-muted-foreground"
+                >
+                  <Languages />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" sideOffset={6} className="font-mono">
+              <DropdownMenuItem onClick={comingSoon("中文")}>中文</DropdownMenuItem>
+              <DropdownMenuItem onClick={comingSoon("English")}>English</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="切换主题"
+                  className="text-muted-foreground"
+                  suppressHydrationWarning
+                >
+                  <TriggerIcon suppressHydrationWarning />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" sideOffset={6} className="font-mono">
+              <DropdownMenuItem onClick={() => setTheme("system")}>
+                <Monitor className="mr-2 size-3.5" />
+                跟随系统
+                {themeMounted && theme === "system" && <CheckMark />}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("light")}>
+                <Sun className="mr-2 size-3.5" />
+                浅色
+                {themeMounted && theme === "light" && <CheckMark />}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("dark")}>
+                <Moon className="mr-2 size-3.5" />
+                深色
+                {themeMounted && theme === "dark" && <CheckMark />}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <div className="mx-1 h-5 w-px bg-border" />
           <Button
             variant="ghost"
@@ -159,4 +185,8 @@ export function NavBar() {
       </div>
     </header>
   )
+}
+
+function CheckMark() {
+  return <Check className="ml-auto size-3.5 text-brand" />
 }
