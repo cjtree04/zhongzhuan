@@ -1,4 +1,5 @@
-import { ArrowRight, Boxes, Gauge, Plug, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -7,62 +8,41 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { FeatureGrid } from "@/components/feature-grid";
 import { HeroGlobe } from "@/components/hero-globe";
-
-const SPECS = [
-  {
-    icon: Boxes,
-    label: "MODELS",
-    value: "40+",
-    desc: "OpenAI / Claude / Gemini / DeepSeek / Qwen",
-  },
-  {
-    icon: Plug,
-    label: "PROTOCOL",
-    value: "OpenAI 兼容",
-    desc: "改 base_url 即可迁移,SDK 全兼容",
-  },
-  {
-    icon: Gauge,
-    label: "LATENCY",
-    value: "< 80ms",
-    desc: "国内直连,首字平均延迟",
-  },
-  {
-    icon: ShieldCheck,
-    label: "UPTIME",
-    value: "99.9%",
-    desc: "故障自动切换,稳定可用",
-  },
-];
+import { PriceCompare } from "@/components/price-compare";
 
 const FAQ = [
   {
     q: "Zhongzhuan Token 是什么?",
-    a: "Zhongzhuan Token 是一个面向开发者的 AI API 中转网关。你只需要一个 API Key,就能调用 OpenAI、Claude、Gemini、DeepSeek、Qwen 等 40+ 主流大模型,按 token 用量结算。",
+    a: "Zhongzhuan Token 是一个面向开发者的海外大模型 API 中转网关。你只需要一个 API Key,就能调用 Claude、GPT-5 等海外最先进的大模型,按 token 用量结算,国内直连。",
   },
   {
-    q: "和直接调用 OpenAI / Claude 官方有什么区别?",
-    a: "1) 一个 Key 接入多家模型,无需分别注册账号、绑卡;2) 支持人民币充值;3) 国内网络直连,延迟更低;4) 完整 OpenAI 兼容协议,现有代码改 base_url 即可。",
+    q: "和直接调用 Claude / OpenAI 官方有什么区别?",
+    a: "1) 一个 Key 同时调两家,无需分别注册账号、绑外币卡;2) 国内多线路直连,延迟更低;3) 不踩区域封号雷;4) 完整 OpenAI 兼容协议 + Anthropic 原生协议双通道,现有代码改一行 base_url 即可。",
   },
   {
-    q: "API 协议和 OpenAI 一样吗?",
-    a: "是。所有模型都暴露为 OpenAI Chat Completions 兼容接口。无论你用的是 openai-python、Vercel AI SDK、LangChain 还是其他客户端,只需要把 base_url 改成 https://zhongzhuantoken.com/v1 即可。",
+    q: "支持哪些客户端 / Agent?",
+    a: "Claude Code、Codex CLI、OpenClaw、Hermes 这些主流 agent 都给了一键脚本和环境变量配置,SDK 层面 openai-python / openai-node / @anthropic-ai/sdk 全兼容。详见 /docs。",
   },
   {
     q: "如何计费?有最低充值门槛吗?",
-    a: "按实际 token 用量结算,价格随官方定价同步调整,部分模型有额外折扣。最低充值 ¥10 起,余额不过期,不强制订阅。",
+    a: "按实际 token 用量结算,人民币充值,余额不过期,不强制订阅。最低 ¥10 起,缓存读取价独立按更低单价计算。",
+  },
+  {
+    q: "稳定性如何?出问题怎么联系?",
+    a: "多上游冗余 + 自动故障切换,SLA 99.9% 月度可用率。7×24 在线客服,工作日 30 分钟、夜间 2 小时内人工响应。",
   },
   {
     q: "我的 API Key 和数据安全吗?",
-    a: "Key 仅用于鉴权,可随时在控制台吊销和重置。请求转发不做训练数据收集,具体可参考服务条款。建议生产环境使用环境变量管理 Key。",
+    a: "Key 仅用于鉴权,可随时在控制台吊销和重置。请求转发不做训练数据收集,不缓存用户请求体。建议生产环境使用环境变量管理 Key。",
   },
 ];
 
 export default function HomePage() {
   return (
     <>
-      {/* Hero — left text / right schematic */}
+      {/* ─── 第一页 · Hero ─── */}
       <section className="relative border-b border-border">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-6 py-20 md:py-28 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-16">
           <div>
@@ -74,25 +54,36 @@ export default function HomePage() {
               STATUS · OPERATIONAL
             </div>
 
-            <h1 className="font-mono text-5xl font-semibold leading-[1.05] tracking-tight md:text-6xl lg:text-[64px]">
-              一个 <span className="text-brand">API Key</span>,
+            <h1 className="font-mono text-4xl font-semibold leading-[1.1] tracking-tight md:text-5xl lg:text-[56px]">
+              接入<span className="text-brand">海外最先进大模型</span>,
               <br />
-              接入全球大模型。
+              一个 API Key 即可。
             </h1>
 
             <p className="mt-8 max-w-xl text-base text-muted-foreground md:text-lg">
-              Zhongzhuan Token 把 OpenAI、Claude、Gemini、DeepSeek、Qwen 等 40+
-              模型统一封装成 OpenAI 兼容接口。改一行 base_url,即刻接入。
+              Zhongzhuan Token 把 Claude、GPT-5 等海外旗舰模型统一封装成
+              OpenAI 兼容接口。国内直连,人民币按量,改一行 base_url 即接入。
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-3">
-              <Button size="lg" className="font-mono group">
-                开始使用
-                <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
-              </Button>
-              <Button size="lg" variant="outline" className="font-mono">
-                查看文档
-              </Button>
+              <Button
+                size="lg"
+                nativeButton={false}
+                className="font-mono group"
+                render={
+                  <Link href="https://zhongzhuantoken.com/login">
+                    立即开始
+                    <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+                }
+              />
+              <Button
+                size="lg"
+                variant="outline"
+                nativeButton={false}
+                className="font-mono"
+                render={<Link href="/docs">查看文档</Link>}
+              />
             </div>
           </div>
 
@@ -100,37 +91,15 @@ export default function HomePage() {
             <HeroGlobe />
           </div>
         </div>
-
-        {/* Specs — full-width band beneath the hero */}
-        <div className="border-t border-border">
-          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px border-x border-border bg-border md:grid-cols-4">
-            {SPECS.map((spec) => {
-              const Icon = spec.icon;
-              return (
-                <div
-                  key={spec.label}
-                  className="group flex flex-col gap-2 bg-background p-6 transition-colors hover:bg-secondary/50"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                      {spec.label}
-                    </span>
-                    <Icon className="size-4 text-brand transition-transform group-hover:-translate-y-0.5" />
-                  </div>
-                  <div className="font-mono text-2xl font-semibold tracking-tight">
-                    {spec.value}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {spec.desc}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
       </section>
 
-      {/* FAQ */}
+      {/* ─── 第二页 · 核心卖点 ─── */}
+      <FeatureGrid />
+
+      {/* ─── 第三页 · 简略价格对比 ─── */}
+      <PriceCompare />
+
+      {/* ─── 第四页 · FAQ ─── */}
       <section id="faq" className="scroll-mt-20 border-b border-border">
         <div className="mx-auto max-w-3xl px-6 py-24 md:py-32">
           <div className="mb-2 font-mono text-[11px] uppercase tracking-wider text-brand">
@@ -140,7 +109,7 @@ export default function HomePage() {
             还有疑问?
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            没在下面找到答案,直接在控制台联系我们,工作日 30 分钟内回复。
+            没在下面找到答案,在控制台联系客服,工作日 30 分钟内回复。
           </p>
 
           <Accordion className="mt-10 border-y border-border">
