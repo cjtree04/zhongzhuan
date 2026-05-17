@@ -51,26 +51,27 @@
 }
 
 :root {
-  --background: oklch(0.99 0.003 80);
-  --foreground: oklch(0.18 0.01 60);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.01 60);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.01 60);
-  --primary: #10a37f;
-  --primary-foreground: oklch(0.99 0.003 80);
-  --brand: #10a37f;
-  --brand-foreground: oklch(0.99 0.003 80);
-  --secondary: oklch(0.96 0.005 70);
-  --secondary-foreground: oklch(0.2 0.01 60);
-  --muted: oklch(0.96 0.005 70);
-  --muted-foreground: oklch(0.5 0.01 60);
-  --accent: oklch(0.96 0.005 70);
-  --accent-foreground: oklch(0.2 0.01 60);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.9 0.005 70);
-  --input: oklch(0.9 0.005 70);
-  --ring: #10a37f;
+  /* Wikimedia Codex light palette */
+  --background: #ffffff;
+  --foreground: #202122;            /* gray900 — base text */
+  --card: #ffffff;
+  --card-foreground: #202122;
+  --popover: #ffffff;
+  --popover-foreground: #202122;
+  --primary: #3366cc;               /* progressive — blue700 (#36c expanded) */
+  --primary-foreground: #ffffff;
+  --brand: #3366cc;
+  --brand-foreground: #ffffff;
+  --secondary: #eaecf0;             /* gray100 — neutral surface */
+  --secondary-foreground: #202122;
+  --muted: #eaecf0;
+  --muted-foreground: #54595d;      /* gray600 — subtle text */
+  --accent: #eaecf0;
+  --accent-foreground: #202122;
+  --destructive: #bf3c2c;           /* Codex destructive */
+  --border: #a2a9b1;                /* gray400 — base border */
+  --input: #a2a9b1;
+  --ring: #3366cc;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -88,26 +89,27 @@
 }
 
 .dark {
-  --background: oklch(0.145 0.005 60);
-  --foreground: oklch(0.97 0.005 80);
-  --card: oklch(0.2 0.008 60);
-  --card-foreground: oklch(0.97 0.005 80);
-  --popover: oklch(0.2 0.008 60);
-  --popover-foreground: oklch(0.97 0.005 80);
-  --primary: #1fb68c;
-  --primary-foreground: oklch(0.145 0.005 60);
-  --brand: #1fb68c;
-  --brand-foreground: oklch(0.145 0.005 60);
-  --secondary: oklch(0.26 0.008 60);
-  --secondary-foreground: oklch(0.97 0.005 80);
-  --muted: oklch(0.26 0.008 60);
-  --muted-foreground: oklch(0.68 0.01 70);
-  --accent: oklch(0.26 0.008 60);
-  --accent-foreground: oklch(0.97 0.005 80);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  /* Wikimedia Codex dark palette (lifted progressive for contrast) */
+  --background: #101418;            /* gray1000 — base bg */
+  --foreground: #f8f9fa;
+  --card: #1a1f24;
+  --card-foreground: #f8f9fa;
+  --popover: #1a1f24;
+  --popover-foreground: #f8f9fa;
+  --primary: #88a3e8;               /* lifted blue700 for dark surfaces */
+  --primary-foreground: #101418;
+  --brand: #88a3e8;
+  --brand-foreground: #101418;
+  --secondary: #27292d;
+  --secondary-foreground: #f8f9fa;
+  --muted: #27292d;
+  --muted-foreground: #a2a9b1;      /* gray400 — subtle on dark */
+  --accent: #27292d;
+  --accent-foreground: #f8f9fa;
+  --destructive: #f87264;
+  --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: #1fb68c;
+  --ring: #88a3e8;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
