@@ -7,11 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
+  GROUP_RATIO,
   PROVIDERS,
-  formatPrice,
+  formatRmb,
   maxSavings,
-  savingsPercent,
+  officialRmb,
+  ourRmb,
+  savingsPercentFor,
   type ModelRow,
+  type Provider,
 } from "@/lib/pricing";
 
 export function PricingExplorer() {
@@ -34,7 +38,7 @@ export function PricingExplorer() {
     <div>
       {/* Toolbar */}
       <div className="mb-6 flex flex-wrap items-center gap-3 border border-border bg-secondary/30 p-3">
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative min-w-[240px] flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={q}
@@ -44,7 +48,7 @@ export function PricingExplorer() {
           />
         </div>
         <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-          单位:美元 / 1M tokens
+          单位:人民币 / 1M tokens
         </div>
       </div>
 
@@ -72,7 +76,7 @@ export function PricingExplorer() {
                       {p.name} · {p.tabLabel} 全系
                     </h2>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {p.description}
+                      {p.description} · 倍率 {GROUP_RATIO[p.id]}× · 每行均省 {savingsPercentFor(p.id)}%
                     </p>
                   </div>
                   {max > 0 ? (
@@ -114,7 +118,8 @@ export function PricingExplorer() {
 }
 
 function FullRow({ row }: { row: ModelRow }) {
-  const saved = savingsPercent(row);
+  const saved = savingsPercentFor(row.provider);
+  // cacheWrite cell shows the 5min variant (most common); 1h is in tooltip-style hint
   return (
     <div className="grid grid-cols-2 items-center gap-3 px-6 py-4 transition-colors hover:bg-secondary/30 md:grid-cols-[1.6fr_repeat(4,1fr)_auto] md:gap-4">
       <div className="col-span-2 md:col-span-1">
@@ -123,12 +128,14 @@ function FullRow({ row }: { row: ModelRow }) {
             {row.display}
           </span>
           {row.badge ? (
-            <span className={cn(
-              "border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider",
-              row.badge === "旗舰" || row.badge === "Codex"
-                ? "border-brand/40 bg-brand/10 text-brand"
-                : "border-border bg-secondary text-muted-foreground"
-            )}>
+            <span
+              className={cn(
+                "border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider",
+                row.badge === "旗舰" || row.badge === "Codex"
+                  ? "border-brand/40 bg-brand/10 text-brand"
+                  : "border-border bg-secondary text-muted-foreground",
+              )}
+            >
               {row.badge}
             </span>
           ) : null}
@@ -140,10 +147,10 @@ function FullRow({ row }: { row: ModelRow }) {
         ) : null}
       </div>
 
-      <Cell label="输入" ours={row.ours.input} official={row.official.input} />
-      <Cell label="输出" ours={row.ours.output} official={row.official.output} />
-      <Cell label="缓存读取" ours={row.ours.cacheRead} official={row.official.cacheRead} />
-      <Cell label="缓存写入" ours={row.ours.cacheWrite} official={row.official.cacheWrite} />
+      <Cell label="输入" usd={row.price.input} provider={row.provider} />
+      <Cell label="输出" usd={row.price.output} provider={row.provider} />
+      <Cell label="缓存读取" usd={row.price.cacheRead} provider={row.provider} />
+      <Cell label="缓存写入" usd={row.price.cacheWrite5m} provider={row.provider} />
 
       <div className="col-span-2 mt-2 md:col-span-1 md:mt-0 md:text-right">
         {saved > 0 ? (
@@ -160,26 +167,34 @@ function FullRow({ row }: { row: ModelRow }) {
 
 function Cell({
   label,
-  ours,
-  official,
+  usd,
+  provider,
 }: {
   label: string;
-  ours?: number;
-  official?: number;
+  usd?: number;
+  provider: Provider;
 }) {
+  if (usd === undefined) {
+    return (
+      <div>
+        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground md:hidden">
+          {label}
+        </div>
+        <div className="font-mono text-sm font-medium text-muted-foreground">—</div>
+      </div>
+    );
+  }
   return (
     <div>
       <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground md:hidden">
         {label}
       </div>
       <div className="font-mono text-sm font-medium text-brand">
-        {formatPrice(ours)}
+        {formatRmb(ourRmb(usd, provider))}
       </div>
-      {official !== undefined ? (
-        <div className="font-mono text-[10px] text-muted-foreground/70 line-through">
-          官方 {formatPrice(official)}
-        </div>
-      ) : null}
+      <div className="font-mono text-[10px] text-muted-foreground/70 line-through">
+        官方 {formatRmb(officialRmb(usd))}
+      </div>
     </div>
   );
 }
