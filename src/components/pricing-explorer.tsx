@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
-  GROUP_RATIO,
   PROVIDERS,
   formatRmb,
   maxSavings,
@@ -71,14 +70,9 @@ export function PricingExplorer() {
               <div className="border border-border bg-background">
                 {/* Title */}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-5">
-                  <div>
-                    <h2 className="font-mono text-2xl font-semibold tracking-tight">
-                      {p.name} · {p.tabLabel} 全系
-                    </h2>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {p.description} · 倍率 {GROUP_RATIO[p.id]}× · 每行均省 {savingsPercentFor(p.id)}%
-                    </p>
-                  </div>
+                  <h2 className="font-mono text-2xl font-semibold tracking-tight">
+                    {p.name} · {p.tabLabel} 全系
+                  </h2>
                   {max > 0 ? (
                     <div className="inline-flex items-center gap-2 border border-brand/30 bg-brand/10 px-3 py-1 font-mono text-xs text-brand">
                       <span className="size-1.5 rounded-full bg-brand" />

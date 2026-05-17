@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  GROUP_RATIO,
   PROVIDERS,
   TOPUP_RATE,
   USD_TO_CNY,
@@ -52,20 +51,14 @@ export function PriceCompare() {
 
           {PROVIDERS.map((p) => {
             const max = maxSavings(p.featured);
-            const saved = savingsPercentFor(p.id);
             return (
               <TabsContent key={p.id} value={p.id} className="mt-0">
                 <div className="border border-border bg-background">
                   {/* Title row */}
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-5">
-                    <div>
-                      <h3 className="font-mono text-2xl font-semibold tracking-tight">
-                        {p.tabLabel} 价格对比
-                      </h3>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {p.description} · 倍率 {GROUP_RATIO[p.id]}× · 每行均省 {saved}%
-                      </p>
-                    </div>
+                    <h3 className="font-mono text-2xl font-semibold tracking-tight">
+                      {p.tabLabel} 价格对比
+                    </h3>
                     <div className="inline-flex items-center gap-2 border border-brand/30 bg-brand/10 px-3 py-1 font-mono text-xs text-brand">
                       <span className="size-1.5 rounded-full bg-brand" />
                       最高省 {max}%
