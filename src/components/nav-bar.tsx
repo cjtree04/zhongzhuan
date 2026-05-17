@@ -1,8 +1,10 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Bell, Languages, Moon } from "lucide-react"
+import { Bell, Languages, Monitor, Moon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -19,6 +21,24 @@ export function NavBar() {
   const pathname = usePathname()
   const router = useRouter()
   const onHome = pathname === "/"
+
+  const { theme, setTheme } = useTheme()
+  const [themeMounted, setThemeMounted] = useState(false)
+  useEffect(() => setThemeMounted(true), [])
+
+  const cycleTheme = () => {
+    const next = theme === "system" ? "light" : theme === "light" ? "dark" : "system"
+    setTheme(next)
+  }
+
+  const ThemeIcon = !themeMounted ? Monitor : theme === "light" ? Sun : theme === "dark" ? Moon : Monitor
+  const themeLabel = !themeMounted
+    ? "切换主题"
+    : theme === "light"
+      ? "当前浅色,点击切到深色"
+      : theme === "dark"
+        ? "当前深色,点击跟随系统"
+        : "当前跟随系统,点击切到浅色"
 
   const handleLeftClick =
     (action: "scrollTop" | "navigate" | "scrollToFaq", href: string) =>
@@ -111,11 +131,13 @@ export function NavBar() {
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="切换主题"
-            onClick={comingSoon("主题切换")}
+            aria-label={themeLabel}
+            title={themeLabel}
+            onClick={cycleTheme}
             className="text-muted-foreground"
+            suppressHydrationWarning
           >
-            <Moon />
+            <ThemeIcon suppressHydrationWarning />
           </Button>
           <div className="mx-1 h-5 w-px bg-border" />
           <Button
