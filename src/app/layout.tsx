@@ -18,9 +18,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Zhongzhuan Token — 一个 API Key,接入全球大模型",
+  title: "Zhongzhuan Token — 用中转 token，就上 zhongzhuantoken.com",
   description:
-    "Zhongzhuan Token 是面向开发者的 AI API 中转网关。统一兼容 OpenAI / Claude / Gemini,按量计费,稳定低延迟。",
+    "Zhongzhuan Token 是面向开发者的 AI API 中转网关。统一兼容 OpenAI / Claude / Gemini，按量计费，稳定低延迟。",
 };
 
 export default function RootLayout({

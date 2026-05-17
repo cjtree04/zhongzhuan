@@ -5,25 +5,25 @@ const FEATURES = [
     icon: Gauge,
     metric: "50ms",
     title: "低延迟",
-    desc: "国内多线路直连,首字平均响应 50ms,长上下文推理同步流式。",
+    desc: "国内多线路直连，首字平均响应 50ms，长上下文推理同步流式。",
   },
   {
     icon: ShieldCheck,
     metric: "99.9%",
     title: "稳定可用",
-    desc: "多上游冗余 + 自动故障切换,SLA 99.9% 月度可用率。",
+    desc: "多上游冗余 + 自动故障切换，SLA 99.9% 月度可用率。",
   },
   {
     icon: Headset,
     metric: "7×24",
     title: "在线客服",
-    desc: "工作日 30 分钟、夜间 2 小时内人工响应,封号/账单/接入问题随时解决。",
+    desc: "工作日 30 分钟、夜间 2 小时内人工响应，封号/账单/接入问题随时解决。",
   },
   {
     icon: Plug,
     metric: "1 line",
     title: "OpenAI 兼容协议",
-    desc: "改一行 base_url 即接入。Claude / GPT 共用同一套 SDK,无需改业务代码。",
+    desc: "改一行 base_url 即接入。Claude / GPT 共用同一套 SDK，无需改业务代码。",
   },
 ];
 
@@ -39,7 +39,7 @@ export function FeatureGrid() {
             为什么选 Zhongzhuan Token?
           </h2>
           <p className="mt-4 text-sm text-muted-foreground md:text-base">
-            把"中转站"做成基础设施 — 低延迟、稳定、服务到位,接入零门槛。
+            把"中转站"做成基础设施 — 低延迟、稳定、服务到位，接入零门槛。
           </p>
         </div>
 

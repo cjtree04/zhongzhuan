@@ -3,10 +3,10 @@
  *
  * 真实算法(对照站点后台 New API 设置):
  * ──────────────────────────────────────────────────────────────
- * · 充值比例: ¥0.46 → $1 余额(固定,与人民币汇率脱钩)
+ * · 充值比例: ¥0.46 → $1 余额(固定，与人民币汇率脱钩)
  * · 消耗倍率(group_ratio):
- *     - GPT / Gemini: 1× → 用 $1 显示价时,扣 $1 余额 = ¥0.46
- *     - Claude(全系): 3× → 用 $1 显示价时,扣 $3 余额 = ¥1.38
+ *     - GPT / Gemini: 1× → 用 $1 显示价时，扣 $1 余额 = ¥0.46
+ *     - Claude(全系): 3× → 用 $1 显示价时，扣 $3 余额 = ¥1.38
  * · 我家"实际人民币成本" = official_usd × ratio × TOPUP_RATE
  * · 对比官方"真实人民币成本" = official_usd × USD_TO_CNY (按真实汇率 ≈ 7)
  * · 节省比例 = 1 − ratio × TOPUP_RATE / USD_TO_CNY
@@ -86,7 +86,7 @@ const CLAUDE_VARIANTS: ModelRow[] = [
   { model: "claude-opus-4-7-thinking", display: "claude-opus-4-7-thinking", provider: "claude", price: OPUS_4X, badge: "Thinking" },
   { model: "claude-opus-4-6-thinking", display: "claude-opus-4-6-thinking", provider: "claude", price: OPUS_4X, badge: "Thinking" },
   { model: "claude-opus-4-5-20251101-thinking", display: "claude-opus-4-5-thinking", provider: "claude", price: OPUS_4X, badge: "Thinking" },
-  // Legacy Opus(官方价更高,节省百分比更亮眼)
+  // Legacy Opus(官方价更高，节省百分比更亮眼)
   { model: "claude-opus-4-1-20250805", display: "claude-opus-4-1", provider: "claude", price: OPUS_LEGACY },
   { model: "claude-opus-4-1-20250805-thinking", display: "claude-opus-4-1-thinking", provider: "claude", price: OPUS_LEGACY, badge: "Thinking" },
   { model: "claude-opus-4-20250514", display: "claude-opus-4", provider: "claude", price: OPUS_LEGACY },
@@ -119,7 +119,7 @@ export const PROVIDERS: ProviderTab[] = [
     id: "claude",
     name: "Anthropic",
     tabLabel: "Claude",
-    description: "Claude 全系模型,含 opus / haiku 主线与 thinking / effort 变体。",
+    description: "Claude 全系模型，含 opus / haiku 主线与 thinking / effort 变体。",
     featured: CLAUDE_FEATURED,
     full: [...CLAUDE_FEATURED, ...CLAUDE_VARIANTS],
   },
@@ -127,7 +127,7 @@ export const PROVIDERS: ProviderTab[] = [
     id: "gpt",
     name: "OpenAI",
     tabLabel: "GPT",
-    description: "GPT-5 全系模型,含主线、mini、codex 变体。",
+    description: "GPT-5 全系模型，含主线、mini、codex 变体。",
     featured: GPT_FEATURED,
     full: GPT_FEATURED,
   },

@@ -15,27 +15,27 @@ import { PriceCompare } from "@/components/price-compare";
 const FAQ = [
   {
     q: "Zhongzhuan Token 是什么?",
-    a: "Zhongzhuan Token 是一个面向开发者的海外大模型 API 中转网关。你只需要一个 API Key,就能调用 Claude、GPT-5 等海外最先进的大模型,按 token 用量结算,国内直连。",
+    a: "Zhongzhuan Token 是一个面向开发者的海外大模型 API 中转网关。你只需要一个 API Key，就能调用 Claude、GPT-5 等海外最先进的大模型，按 token 用量结算，国内直连。",
   },
   {
     q: "和直接调用 Claude / OpenAI 官方有什么区别?",
-    a: "1) 一个 Key 同时调两家,无需分别注册账号、绑外币卡;2) 国内多线路直连,延迟更低;3) 不踩区域封号雷;4) 完整 OpenAI 兼容协议 + Anthropic 原生协议双通道,现有代码改一行 base_url 即可。",
+    a: "1) 一个 Key 同时调两家，无需分别注册账号、绑外币卡；2) 国内多线路直连，延迟更低；3) 不踩区域封号雷；4) 完整 OpenAI 兼容协议 + Anthropic 原生协议双通道，现有代码改一行 base_url 即可。",
   },
   {
     q: "支持哪些客户端 / Agent?",
-    a: "Claude Code、Codex CLI、OpenClaw、Hermes 这些主流 agent 都给了一键脚本和环境变量配置,SDK 层面 openai-python / openai-node / @anthropic-ai/sdk 全兼容。详见 /docs。",
+    a: "Claude Code、Codex CLI、OpenClaw、Hermes 这些主流 agent 都给了一键脚本和环境变量配置，SDK 层面 openai-python / openai-node / @anthropic-ai/sdk 全兼容。详见 /docs。",
   },
   {
     q: "如何计费?有最低充值门槛吗?",
-    a: "按实际 token 用量结算,人民币充值,余额不过期,不强制订阅。最低 ¥10 起,缓存读取价独立按更低单价计算。",
+    a: "按实际 token 用量结算，人民币充值，余额不过期，不强制订阅。最低 ¥10 起，缓存读取价独立按更低单价计算。",
   },
   {
     q: "稳定性如何?出问题怎么联系?",
-    a: "多上游冗余 + 自动故障切换,SLA 99.9% 月度可用率。7×24 在线客服,工作日 30 分钟、夜间 2 小时内人工响应。",
+    a: "多上游冗余 + 自动故障切换，SLA 99.9% 月度可用率。7×24 在线客服，工作日 30 分钟、夜间 2 小时内人工响应。",
   },
   {
     q: "我的 API Key 和数据安全吗?",
-    a: "Key 仅用于鉴权,可随时在控制台吊销和重置。请求转发不做训练数据收集,不缓存用户请求体。建议生产环境使用环境变量管理 Key。",
+    a: "Key 仅用于鉴权，可随时在控制台吊销和重置。请求转发不做训练数据收集，不缓存用户请求体。建议生产环境使用环境变量管理 Key。",
   },
 ];
 
@@ -55,14 +55,13 @@ export default function HomePage() {
             </div>
 
             <h1 className="font-mono text-4xl font-semibold leading-[1.1] tracking-tight md:text-5xl lg:text-[56px]">
-              接入<span className="text-brand">海外最先进大模型</span>,
+              用<span className="text-brand">中转 token</span>，
               <br />
-              一个 API Key 即可。
+              就上 zhongzhuantoken.com
             </h1>
 
             <p className="mt-8 max-w-xl text-base text-muted-foreground md:text-lg">
-              Zhongzhuan Token 把 Claude、GPT-5 等海外旗舰模型统一封装成
-              OpenAI 兼容接口。国内直连,人民币按量,改一行 base_url 即接入。
+              一个 api key 接入海外最先进的大模型，国内直连，支持人民币结算。
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-3">
@@ -109,7 +108,7 @@ export default function HomePage() {
             还有疑问?
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            没在下面找到答案,在控制台联系客服,工作日 30 分钟内回复。
+            没在下面找到答案，在控制台联系客服，工作日 30 分钟内回复。
           </p>
 
           <Accordion className="mt-10 border-y border-border">

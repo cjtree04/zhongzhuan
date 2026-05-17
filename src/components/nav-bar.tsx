@@ -61,7 +61,7 @@ export function NavBar() {
 
   const comingSoon = (label: string) => () =>
     toast(`${label} · Coming soon`, {
-      description: "功能开发中,稍后上线。",
+      description: "功能开发中，稍后上线。",
     })
 
   return (

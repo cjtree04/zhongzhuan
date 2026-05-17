@@ -28,7 +28,7 @@ export function PriceCompare() {
             本站价格 vs 官方真实成本
           </h2>
           <p className="mt-4 text-sm text-muted-foreground md:text-base">
-            人民币按量结算,余额不过期。下表展示旗舰模型对比,
+            下表展示旗舰模型对比，
             <Link href="/pricing" className="font-medium text-brand underline-offset-2 hover:underline">
               查看完整价格表 →
             </Link>
@@ -85,12 +85,12 @@ export function PriceCompare() {
                   <div className="space-y-1.5 border-t border-border px-6 py-4 text-xs text-muted-foreground">
                     <div>
                       显示价格为人民币(¥) — 你的真实扣费金额。充值比例固定
-                      <span className="mx-1 font-mono text-foreground">¥{TOPUP_RATE} → $1 余额</span>;
-                      Claude 类按 <span className="font-mono text-foreground">3×</span> 倍率扣 USD 余额,
+                      <span className="mx-1 font-mono text-foreground">¥{TOPUP_RATE} → $1 余额</span>；
+                      Claude 类按 <span className="font-mono text-foreground">3×</span> 倍率扣 USD 余额，
                       GPT/Gemini 按 <span className="font-mono text-foreground">1×</span> 扣。
                     </div>
                     <div>
-                      划线价为官方按真实汇率 <span className="font-mono text-foreground">¥{USD_TO_CNY}/$1</span> 换算的人民币成本,实际扣费以模型、分组和缓存命中情况为准。
+                      划线价为官方按真实汇率 <span className="font-mono text-foreground">¥{USD_TO_CNY}/$1</span> 换算的人民币成本，实际扣费以模型、分组和缓存命中情况为准。
                     </div>
                   </div>
                 </div>

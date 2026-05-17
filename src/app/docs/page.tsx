@@ -3,7 +3,7 @@ import { DocsSidebar } from "@/components/docs-sidebar";
 
 export const metadata = {
   title: "接入文档 — Zhongzhuan Token",
-  description: "Claude Code / Codex / OpenClaw / Hermes 等主流 agent 一键接入指南,SDK 直调示例。",
+  description: "Claude Code / Codex / OpenClaw / Hermes 等主流 agent 一键接入指南，SDK 直调示例。",
 };
 
 const BASE = "https://zhongzhuantoken.com";
@@ -19,12 +19,12 @@ export default function DocsPage() {
           <Section id="intro" title="接入概览" eyebrow="INTRO">
             <p>
               Zhongzhuan Token 通过统一的 OpenAI 兼容协议 + Anthropic 原生协议
-              双通道,将 Claude 与 GPT-5 全系模型暴露在同一域名下。下面这两个
+              双通道，将 Claude 与 GPT-5 全系模型暴露在同一域名下。下面这两个
               base_url 覆盖了所有客户端需要的接入方式:
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Endpoint label="OpenAI 兼容(Codex / openai SDK)" url={`${BASE}/v1`} />
-              <Endpoint label="Anthropic 原生(Claude Code / anthropic SDK)" url={BASE} note="末尾不带 /v1,SDK 自己会补" />
+              <Endpoint label="Anthropic 原生(Claude Code / anthropic SDK)" url={BASE} note="末尾不带 /v1，SDK 自己会补" />
             </div>
             <p>
               <strong>API Key</strong> 请先在控制台「
@@ -38,7 +38,7 @@ export default function DocsPage() {
           {/* ───────────── Part 1 ───────────── */}
           <Section id="part1" title="第一部分 · 网站使用文档" eyebrow="PART 01">
             <Placeholder>
-              这一部分将随网站功能(注册、充值、令牌、监控、邀请)逐步上线,目前留位待补。
+              这一部分将随网站功能(注册、充值、令牌、监控、邀请)逐步上线，目前留位待补。
               先用第二部分的 Agent 配置指南即可开始接入。
             </Placeholder>
           </Section>
@@ -47,17 +47,17 @@ export default function DocsPage() {
           <Section id="part2" title="第二部分 · Agent 接入配置" eyebrow="PART 02">
             <p>
               下面所有 agent 都用同一个 <Inline>YOUR_KEY</Inline> 即可。
-              本站统一使用 <Inline>{BASE}</Inline> 作为根域名,
-              不同 agent 对路径前缀的预期不同(部分自动补 <Inline>/v1</Inline>,
-              部分需要你显式写),按下方示例直接复制即可。
+              本站统一使用 <Inline>{BASE}</Inline> 作为根域名，
+              不同 agent 对路径前缀的预期不同(部分自动补 <Inline>/v1</Inline>，
+              部分需要你显式写)，按下方示例直接复制即可。
             </p>
           </Section>
 
           {/* ───────────── Claude Code ───────────── */}
           <Section id="claude-code" title="Claude Code" eyebrow="AGENT · 01">
             <p>
-              Anthropic 官方 CLI,默认走 Anthropic 原生协议。把 base_url
-              指向本站即可,模型名直接用 <Inline>claude-opus-4-7</Inline> 等。
+              Anthropic 官方 CLI，默认走 Anthropic 原生协议。把 base_url
+              指向本站即可，模型名直接用 <Inline>claude-opus-4-7</Inline> 等。
             </p>
 
             <Step n={1} title="安装(若已安装跳过)" />
@@ -76,7 +76,7 @@ claude --version`}
             <Step n={2} title="配置环境变量" />
             <CodeBlock
               lang="bash"
-              code={`# macOS / Linux,加入 ~/.zshrc 或 ~/.bashrc
+              code={`# macOS / Linux，加入 ~/.zshrc 或 ~/.bashrc
 export ANTHROPIC_BASE_URL="${BASE}"
 export ANTHROPIC_AUTH_TOKEN="YOUR_KEY"
 export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
@@ -89,7 +89,7 @@ source ~/.zshrc`}
 [System.Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", "${BASE}", "User")
 [System.Environment]::SetEnvironmentVariable("ANTHROPIC_AUTH_TOKEN", "YOUR_KEY", "User")
 [System.Environment]::SetEnvironmentVariable("CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC", "1", "User")
-# 关掉当前终端,重开 PowerShell 让变量生效`}
+# 关掉当前终端，重开 PowerShell 让变量生效`}
             />
 
             <Step n={3} title="开始使用" />
@@ -97,15 +97,15 @@ source ~/.zshrc`}
               lang="bash"
               code={`cd your-project
 claude
-# 进入交互式 REPL,直接对话`}
+# 进入交互式 REPL，直接对话`}
             />
           </Section>
 
           {/* ───────────── Codex ───────────── */}
           <Section id="codex" title="Codex (OpenAI)" eyebrow="AGENT · 02">
             <p>
-              OpenAI 官方 CLI,走 OpenAI Chat Completions 协议。base_url
-              要带 <Inline>/v1</Inline>,模型名用 <Inline>gpt-5.5</Inline> 等。
+              OpenAI 官方 CLI，走 OpenAI Chat Completions 协议。base_url
+              要带 <Inline>/v1</Inline>，模型名用 <Inline>gpt-5.5</Inline> 等。
             </p>
 
             <Step n={1} title="安装" />
@@ -153,17 +153,17 @@ echo 'export OPENAI_API_KEY="YOUR_KEY"' >> ~/.zshrc`}
           {/* ───────────── OpenClaw ───────────── */}
           <Section id="openclaw" title="OpenClaw" eyebrow="AGENT · 03">
             <p>
-              开源双协议 agent,同一个客户端可以在 Anthropic 通道和 OpenAI 通道间切换。
+              开源双协议 agent，同一个客户端可以在 Anthropic 通道和 OpenAI 通道间切换。
               本站两个通道分别如下:
             </p>
             <ul className="ml-5 list-disc space-y-1 text-sm">
               <li>
                 Anthropic(Claude)通道 base_url:<Inline>{BASE}</Inline>
-                <span className="ml-1 text-muted-foreground">— 不带 /v1,示例模型 <Inline>claude-opus-4-7</Inline></span>
+                <span className="ml-1 text-muted-foreground">— 不带 /v1，示例模型 <Inline>claude-opus-4-7</Inline></span>
               </li>
               <li>
                 OpenAI(Codex)通道 base_url:<Inline>{BASE}/v1</Inline>
-                <span className="ml-1 text-muted-foreground">— 必须带 /v1,示例模型 <Inline>gpt-5.5</Inline></span>
+                <span className="ml-1 text-muted-foreground">— 必须带 /v1，示例模型 <Inline>gpt-5.5</Inline></span>
               </li>
             </ul>
 
@@ -171,7 +171,7 @@ echo 'export OPENAI_API_KEY="YOUR_KEY"' >> ~/.zshrc`}
             <CodeBlock
               lang="bash"
               code={`curl -fsSL https://apikey.fun/install/openclaw.sh | sudo bash
-# 脚本会提示选择通道(Anthropic / OpenAI)和粘贴 API Key`}
+# 脚本会提示选择通道(Anthropic / OpenAI)并粘贴 API Key`}
             />
 
             <Step n={2} title="手动配置(可选)" />
@@ -192,7 +192,7 @@ openclaw --provider openai --model gpt-5.5`}
           {/* ───────────── Hermes ───────────── */}
           <Section id="hermes" title="Hermes" eyebrow="AGENT · 04">
             <p>
-              轻量级编程 agent,默认走 OpenAI 兼容协议,也支持切换 Anthropic
+              轻量级编程 agent，默认走 OpenAI 兼容协议，也支持切换 Anthropic
               通道。一键脚本会引导你完成配置。
             </p>
 
@@ -226,7 +226,7 @@ hermes`}
           {/* ───────────── SDK 直调 ───────────── */}
           <Section id="sdk" title="SDK 直调" eyebrow="SDK">
             <p>
-              如果你在自己写 agent 或集成到现有项目,直接用官方 SDK 改 base_url
+              如果你在自己写 agent 或集成到现有项目，直接用官方 SDK 改 base_url
               即可。下面三种最常见。
             </p>
 
@@ -306,13 +306,13 @@ curl ${BASE}/v1/messages \\
               检查 API Key 是否复制完整、是否被环境变量覆盖。控制台「令牌管理」可重新生成。
             </Faq>
             <Faq q="返回 404 / Endpoint not found">
-              确认 base_url 是否带 <Inline>/v1</Inline>。OpenAI 协议要带,Anthropic 原生协议不带。
+              确认 base_url 是否带 <Inline>/v1</Inline>。OpenAI 协议要带，Anthropic 原生协议不带。
             </Faq>
             <Faq q="返回 429 / Rate limit">
-              切到 vip 分组,或联系客服调整速率上限。
+              切到 vip 分组，或联系客服调整速率上限。
             </Faq>
             <Faq q="Claude Code 黄字警告 / 异常退出">
-              确认设置了 <Inline>CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1</Inline>,
+              确认设置了 <Inline>CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1</Inline>，
               否则会向 anthropic.com 发遥测请求被中转拒绝。
             </Faq>
           </Section>
