@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   PROVIDERS,
+  USD_TO_CNY_RATE,
   formatPrice,
   maxSavings,
   savingsPercent,
@@ -66,7 +67,7 @@ export function PriceCompare() {
                     </div>
                     <div className="inline-flex items-center gap-2 border border-brand/30 bg-brand/10 px-3 py-1 font-mono text-xs text-brand">
                       <span className="size-1.5 rounded-full bg-brand" />
-                      最高约省 {max}%
+                      最高省 {max}%
                     </div>
                   </div>
 
@@ -87,15 +88,20 @@ export function PriceCompare() {
                   </div>
 
                   {/* Footnote */}
-                  <div className="border-t border-border px-6 py-4 text-xs text-muted-foreground">
-                    实际扣费以模型、分组和缓存命中情况为准。完整价格表见{" "}
-                    <Link
-                      href="/pricing"
-                      className="text-brand underline-offset-2 hover:underline"
-                    >
-                      /pricing
-                    </Link>
-                    。
+                  <div className="space-y-1.5 border-t border-border px-6 py-4 text-xs text-muted-foreground">
+                    <div>
+                      价格单位 $ 对应人民币,按 <span className="font-mono text-foreground">1 : 1</span> 从余额扣 RMB(即 $1 ≈ ¥1)。节省比例已按 1 USD ≈ ¥{USD_TO_CNY_RATE} 折算后对比官方真实人民币成本。
+                    </div>
+                    <div>
+                      实际扣费以模型、分组和缓存命中情况为准。完整价格表见{" "}
+                      <Link
+                        href="/pricing"
+                        className="text-brand underline-offset-2 hover:underline"
+                      >
+                        /pricing
+                      </Link>
+                      。
+                    </div>
                   </div>
                 </div>
               </TabsContent>
@@ -153,7 +159,7 @@ function PriceRow({ row }: { row: ModelRow }) {
       <div className="col-span-2 mt-2 md:col-span-1 md:mt-0 md:text-right">
         {saved > 0 ? (
           <span className="inline-flex items-center border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-mono text-xs text-emerald-700 dark:text-emerald-400">
-            约省 {saved}%
+            省 {saved}%
           </span>
         ) : (
           <span className="font-mono text-xs text-muted-foreground">—</span>

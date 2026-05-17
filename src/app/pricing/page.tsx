@@ -1,4 +1,5 @@
 import { PricingExplorer } from "@/components/pricing-explorer";
+import { USD_TO_CNY_RATE } from "@/lib/pricing";
 
 export const metadata = {
   title: "价格 — Zhongzhuan Token",
@@ -18,8 +19,8 @@ export default function PricingPage() {
           </h1>
           <p className="mt-4 text-sm text-muted-foreground md:text-base">
             Claude 全系 · GPT-5 全系 · 含 thinking / effort / codex
-            等变体。价格按 USD per 1M tokens,实际扣费按人民币汇率结算,
-            缓存读取按命中后单价独立计费。
+            等变体。价格单位 $ 直接对应人民币(<span className="font-mono text-foreground">$1 ≈ ¥1</span>),
+            节省比例按 1 USD ≈ ¥{USD_TO_CNY_RATE} 折算后对比官方真实人民币成本。
           </p>
         </div>
 
@@ -28,6 +29,7 @@ export default function PricingPage() {
         <div className="mt-12 border border-border bg-secondary/30 p-6 font-mono text-xs leading-relaxed text-muted-foreground md:text-sm">
           <div className="mb-2 font-semibold text-foreground">计价规则速查</div>
           <ul className="space-y-1.5">
+            <li>· 显示价格的 $ 等于 ¥,按 1:1 从余额扣 RMB(不存在汇率波动)</li>
             <li>· 输入 / 输出 / 缓存读取 / 缓存写入 分别按各自单价计费</li>
             <li>· 缓存命中按 cacheRead 单价(通常为输入价 1/10)结算,5 分钟窗口</li>
             <li>· 1h cacheWrite 适用部分 Claude 模型,长上下文 agent 推荐使用</li>

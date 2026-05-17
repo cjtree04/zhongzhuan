@@ -78,7 +78,7 @@ export function PricingExplorer() {
                   {max > 0 ? (
                     <div className="inline-flex items-center gap-2 border border-brand/30 bg-brand/10 px-3 py-1 font-mono text-xs text-brand">
                       <span className="size-1.5 rounded-full bg-brand" />
-                      最高约省 {max}%
+                      最高省 {max}%
                     </div>
                   ) : null}
                 </div>
@@ -148,7 +148,7 @@ function FullRow({ row }: { row: ModelRow }) {
       <div className="col-span-2 mt-2 md:col-span-1 md:mt-0 md:text-right">
         {saved > 0 ? (
           <span className="inline-flex items-center border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-mono text-xs text-emerald-700 dark:text-emerald-400">
-            约省 {saved}%
+            省 {saved}%
           </span>
         ) : (
           <span className="font-mono text-xs text-muted-foreground">—</span>

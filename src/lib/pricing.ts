@@ -157,12 +157,25 @@ export const PROVIDERS: ProviderTab[] = [
   },
 ];
 
-/** Savings percentage based on output price (the dominant cost). */
+/**
+ * 美元 → 人民币换算汇率。
+ *
+ * 行业惯例:中转站显示美元价,但实际按 1 USD = 1 CNY 从余额扣人民币。
+ * 节省百分比基于"我家扣的 RMB"对比"官方扣的 RMB(= 官方美元 × 汇率)"计算。
+ *
+ * 想改汇率(比如官方人民币结算或者不同的兑换比例),只改这一个常量。
+ */
+export const USD_TO_CNY_RATE = 7;
+
+/**
+ * 节省百分比,基于输出价(主要成本)对比"折算后的官方人民币价"。
+ * 计算口径:`1 - (ours_usd_displayed) / (official_usd × rate)`
+ */
 export function savingsPercent(row: ModelRow): number {
-  const off = row.official.output;
+  const off = row.official.output * USD_TO_CNY_RATE;
   const ours = row.ours.output;
   if (off <= 0) return 0;
-  return Math.round((1 - ours / off) * 100);
+  return Math.max(0, Math.round((1 - ours / off) * 100));
 }
 
 /** Max savings across all featured models in a tab — used for the title chip. */
