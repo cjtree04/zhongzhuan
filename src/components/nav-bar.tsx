@@ -169,18 +169,35 @@ export function NavBar() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={comingSoon("登录")}
+            nativeButton={false}
             className="font-mono"
-          >
-            登录
-          </Button>
+            render={
+              <Link href="https://zhongzhuantoken.com/console" target="_top">
+                控制台
+              </Link>
+            }
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            nativeButton={false}
+            className="font-mono"
+            render={
+              <Link href="https://zhongzhuantoken.com/login" target="_top">
+                登录
+              </Link>
+            }
+          />
           <Button
             size="sm"
-            onClick={comingSoon("注册")}
+            nativeButton={false}
             className="font-mono"
-          >
-            注册
-          </Button>
+            render={
+              <Link href="https://zhongzhuantoken.com/register" target="_top">
+                注册
+              </Link>
+            }
+          />
         </div>
       </div>
     </header>

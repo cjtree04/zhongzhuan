@@ -70,7 +70,7 @@ export default function HomePage() {
                 nativeButton={false}
                 className="font-mono group"
                 render={
-                  <Link href="https://zhongzhuantoken.com/login">
+                  <Link href="https://zhongzhuantoken.com/register" target="_top">
                     立即开始
                     <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
                   </Link>
