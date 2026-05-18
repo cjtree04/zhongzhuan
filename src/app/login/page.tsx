@@ -1,0 +1,193 @@
+"use client";
+
+import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+
+import { AuthCard, FormError } from "@/components/auth-card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { api } from "@/lib/api";
+
+function LoginInner() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const redirectTo = params.get("redirect") || "/console";
+
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const [needs2FA, setNeeds2FA] = useState(false);
+  const [code, setCode] = useState("");
+
+  // 已登录就直接跳走
+  useEffect(() => {
+    api.self().then((r) => {
+      if (r.success && r.data?.id) router.replace(redirectTo);
+    });
+  }, [router, redirectTo]);
+
+  async function submitLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    const r = await api.login({ username, password });
+    setLoading(false);
+    if (!r.success) {
+      setError(r.message || "登录失败");
+      return;
+    }
+    if (r.data?.require_2fa) {
+      setNeeds2FA(true);
+      return;
+    }
+    router.replace(redirectTo);
+  }
+
+  async function submit2FA(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    const r = await api.loginVerify2FA({ code });
+    setLoading(false);
+    if (!r.success) {
+      setError(r.message || "验证码错误");
+      return;
+    }
+    router.replace(redirectTo);
+  }
+
+  if (needs2FA) {
+    return (
+      <AuthCard
+        eyebrow="TWO-FACTOR · 二次验证"
+        title="输入验证码"
+        subtitle="打开 Authenticator,输入 6 位动态码完成登录。"
+      >
+        <form onSubmit={submit2FA} className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="code" className="font-mono text-[11px] uppercase tracking-wider">
+              6 位验证码
+            </Label>
+            <Input
+              id="code"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              required
+              autoComplete="one-time-code"
+              autoFocus
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              className="text-center font-mono text-2xl tracking-[0.4em]"
+              disabled={loading}
+            />
+          </div>
+          <FormError message={error} />
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full font-mono"
+            disabled={loading || code.length !== 6}
+          >
+            {loading ? "验证中…" : "验证并登录"}
+          </Button>
+          <button
+            type="button"
+            onClick={() => {
+              setNeeds2FA(false);
+              setCode("");
+              setError("");
+            }}
+            className="block w-full text-center font-mono text-xs text-muted-foreground hover:text-brand"
+          >
+            ← 返回上一步
+          </button>
+        </form>
+      </AuthCard>
+    );
+  }
+
+  return (
+    <AuthCard
+      eyebrow="LOGIN · 登录"
+      title="登录到 Zhongzhuan Token"
+      subtitle="用户名或邮箱 + 密码,登录后进入控制台。"
+    >
+      <form onSubmit={submitLogin} className="space-y-5">
+        <div className="space-y-2">
+          <Label htmlFor="username" className="font-mono text-[11px] uppercase tracking-wider">
+            用户名 / 邮箱
+          </Label>
+          <Input
+            id="username"
+            type="text"
+            required
+            autoComplete="username"
+            autoFocus
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="font-mono"
+            disabled={loading}
+            placeholder="cj / cj@example.com"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password" className="font-mono text-[11px] uppercase tracking-wider">
+              密码
+            </Label>
+            <Link
+              href="/forgot"
+              className="font-mono text-[11px] text-muted-foreground hover:text-brand"
+            >
+              忘记密码?
+            </Link>
+          </div>
+          <Input
+            id="password"
+            type="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="font-mono"
+            disabled={loading}
+            placeholder="••••••••"
+          />
+        </div>
+
+        <FormError message={error} />
+
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full font-mono"
+          disabled={loading || !username || !password}
+        >
+          {loading ? "登录中…" : "登录"}
+        </Button>
+
+        <div className="text-center font-mono text-xs text-muted-foreground">
+          还没有账号?{" "}
+          <Link href="/register" className="text-brand underline-offset-2 hover:underline">
+            注册一个 →
+          </Link>
+        </div>
+      </form>
+    </AuthCard>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginInner />
+    </Suspense>
+  );
+}
