@@ -1,8 +1,9 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 import { AuthCard, FormError } from "@/components/auth-card";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api, clearAuthState, getStoredUserId, saveAuthState } from "@/lib/api";
 
+/**
+ * 把外部传入的 redirect 参数夹到「站内相对路径」内,避免开放重定向。
+ * 规则:必须以 `/` 开头,且不能是 `//foo`、`/\foo` 这种协议相对的形式。
+ * 不合法时直接落回 `/console`。
+ */
+function safeRedirect(raw: string | null): string {
+  const fallback = "/console";
+  if (!raw) return fallback;
+  if (raw.length > 512) return fallback;
+  if (!raw.startsWith("/")) return fallback;
+  if (raw.startsWith("//") || raw.startsWith("/\\")) return fallback;
+  return raw;
+}
+
 function LoginInner() {
   const params = useSearchParams();
-  const redirectTo = params.get("redirect") || "/console";
+  const redirectTo = useMemo(
+    () => safeRedirect(params.get("redirect")),
+    [params],
+  );
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -156,12 +174,17 @@ function LoginInner() {
             <Label htmlFor="password" className="font-mono text-[11px] uppercase tracking-wider">
               密码
             </Label>
-            <Link
-              href="/forgot"
+            <button
+              type="button"
+              onClick={() =>
+                toast("忘记密码 · 暂未开放", {
+                  description: "请通过站内客服或邮箱联系管理员重置密码。",
+                })
+              }
               className="font-mono text-[11px] text-muted-foreground hover:text-brand"
             >
               忘记密码?
-            </Link>
+            </button>
           </div>
           <Input
             id="password"
