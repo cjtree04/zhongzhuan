@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Bell, Check, Languages, LayoutDashboard, LogOut, Monitor, Moon, Sun, UserCircle } from "lucide-react"
+import { Bell, Check, Languages, LayoutDashboard, LogOut, Monitor, Moon, ShieldCheck, Sun, UserCircle } from "lucide-react"
 import { useTheme } from "next-themes"
 import { toast } from "sonner"
 
@@ -217,12 +217,22 @@ export function NavBar() {
                   />
                   <DropdownMenuItem
                     render={
-                      <Link href="/console/personal" target="_top">
+                      <Link href="/console/personal">
                         <UserCircle className="mr-2 size-3.5" />
                         个人设置
                       </Link>
                     }
                   />
+                  {user.role >= 10 ? (
+                    <DropdownMenuItem
+                      render={
+                        <Link href="/admin" target="_top">
+                          <ShieldCheck className="mr-2 size-3.5" />
+                          管理员后台
+                        </Link>
+                      }
+                    />
+                  ) : null}
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 size-3.5" />
                     退出登录

@@ -288,6 +288,77 @@ export const api = {
       return { message: "error", data: "网络错误" };
     }
   },
+
+  /** 更新当前用户资料(可选传 display_name / email / language / sidebar_modules;改密码必须带 original_password) */
+  updateSelf(payload: UpdateSelfPayload) {
+    return jsonFetch<null>("/api/user/self", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  /** 软删除当前账号(不可逆,前端必须做二次确认) */
+  deleteSelf() {
+    return jsonFetch<null>("/api/user/self", { method: "DELETE" });
+  },
+
+  /** 邮箱换绑/首绑:需要先 sendEmailVerification,再带 code */
+  bindEmail(payload: { email: string; code: string }) {
+    return jsonFetch<null>("/api/oauth/email/bind", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  /** 通知与偏好(UserSetting JSON);PUT /api/user/setting,可只传需要更新的字段 */
+  updateSetting(payload: UserSettingPayload) {
+    return jsonFetch<null>("/api/user/setting", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  // ── 2FA ──────────────────────────────────────────────────
+  twoFAStatus() {
+    return jsonFetch<TwoFAStatus>("/api/user/self/2fa/status", { method: "GET" });
+  },
+  twoFASetup() {
+    return jsonFetch<TwoFASetup>("/api/user/self/2fa/setup", { method: "POST" });
+  },
+  twoFAEnable(code: string) {
+    return jsonFetch<null>("/api/user/self/2fa/enable", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    });
+  },
+  twoFADisable(code: string) {
+    return jsonFetch<null>("/api/user/self/2fa/disable", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    });
+  },
+  twoFARegenerateBackupCodes(code: string) {
+    return jsonFetch<{ backup_codes: string[] }>(
+      "/api/user/self/2fa/backup_codes",
+      { method: "POST", body: JSON.stringify({ code }) },
+    );
+  },
+
+  // ── Passkey ──────────────────────────────────────────────
+  passkeyStatus() {
+    return jsonFetch<PasskeyStatus>("/api/user/self/passkey", { method: "GET" });
+  },
+
+  // ── 邀请 ─────────────────────────────────────────────────
+  affCode() {
+    return jsonFetch<{ aff_code: string }>("/api/user/self/aff", { method: "GET" });
+  },
+  affTransfer(quota: number) {
+    return jsonFetch<null>("/api/user/self/aff_transfer", {
+      method: "POST",
+      body: JSON.stringify({ quota }),
+    });
+  },
 };
 
 export type PayMethod = {
@@ -295,6 +366,47 @@ export type PayMethod = {
   type: string;
   color?: string;
   min_topup?: string;
+};
+
+export type UpdateSelfPayload = {
+  display_name?: string;
+  email?: string;
+  language?: string;
+  sidebar_modules?: string;
+  original_password?: string;
+  password?: string;
+};
+
+/** New API dto.UserSetting 的子集,前端用到哪个就传哪个 */
+export type UserSettingPayload = Partial<{
+  notify_type: "email" | "webhook" | "bark" | "gotify";
+  quota_warning_threshold: number;
+  webhook_url: string;
+  webhook_secret: string;
+  notification_email: string;
+  bark_url: string;
+  gotify_url: string;
+  gotify_token: string;
+  gotify_priority: number;
+  accept_unset_model_ratio_model: boolean;
+  record_ip_log: boolean;
+}>;
+
+export type TwoFAStatus = {
+  enabled: boolean;
+  locked?: boolean;
+  backup_codes_remaining?: number;
+};
+
+export type TwoFASetup = {
+  secret: string;
+  qr_code_data: string;
+  backup_codes: string[];
+};
+
+export type PasskeyStatus = {
+  enabled: boolean;
+  last_used_at?: number;
 };
 
 export type TopUpInfo = {
