@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { toast } from "sonner";
 
 import { AuthCard, FormError } from "@/components/auth-card";
 import { Button } from "@/components/ui/button";
@@ -174,17 +173,12 @@ function LoginInner() {
             <Label htmlFor="password" className="font-mono text-[11px] uppercase tracking-wider">
               密码
             </Label>
-            <button
-              type="button"
-              onClick={() =>
-                toast("忘记密码 · 暂未开放", {
-                  description: "请通过站内客服或邮箱联系管理员重置密码。",
-                })
-              }
+            <Link
+              href="/forgot"
               className="font-mono text-[11px] text-muted-foreground hover:text-brand"
             >
               忘记密码?
-            </button>
+            </Link>
           </div>
           <Input
             id="password"

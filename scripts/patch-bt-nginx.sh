@@ -16,7 +16,7 @@ set -e
 trap 'echo ""; echo "✗ 补丁脚本在第 $LINENO 行失败,退出"; exit 1' ERR
 
 NGINX_CONF="/www/server/nginx/conf/nginx.conf"
-V2_MARKER="zhongzhuan_web_v6_personal"
+V2_MARKER="zhongzhuan_web_v7_forgot"
 
 if [ ! -f "$NGINX_CONF" ]; then
   echo "✗ 找不到 $NGINX_CONF — 这台机器可能没装宝塔"
@@ -296,7 +296,7 @@ v5_block_old = """        # zhongzhuan_web_v5_token_log (marker, 不要删)
         }"""
 
 # ─── v6:加 /console/personal 精确路由 ───
-v6_block = """        # zhongzhuan_web_v6_personal (marker, 不要删)
+v6_block_old = """        # zhongzhuan_web_v6_personal (marker, 不要删)
         # 通用代理 header,server 级,所有 location 继承
         proxy_http_version 1.1;
         proxy_set_header Host $host;
@@ -354,26 +354,94 @@ v6_block = """        # zhongzhuan_web_v6_personal (marker, 不要删)
             proxy_pass http://127.0.0.1:3000;
         }"""
 
-if v5_block_old in content:
-    new_content = content.replace(v5_block_old, v6_block, 1)
-    print("✓ 检测到 v5 patch,升级到 v6(加 /console/personal)")
+# ─── v7:加 /forgot + /user/reset 找回密码 ───
+v7_block = """        # zhongzhuan_web_v7_forgot (marker, 不要删)
+        # 通用代理 header,server 级,所有 location 继承
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 600s;
+        proxy_send_timeout 600s;
+        send_timeout 600s;
+
+        # ── 自研前端 Next.js (:3100):marketing + auth + console + reset 流程 ──
+        location = / {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location /pricing {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location /docs {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location /_next {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /favicon.ico {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /login {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /register {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /forgot {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /user/reset {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /console {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /console/topup {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /console/token {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /console/log {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /console/personal {
+            proxy_pass http://127.0.0.1:3100;
+        }
+
+        # ── 其他 (/admin /setup /api/* /v1/* …) → New API (:3000) ──
+        location / {
+            proxy_pass http://127.0.0.1:3000;
+        }"""
+
+if v6_block_old in content:
+    new_content = content.replace(v6_block_old, v7_block, 1)
+    print("✓ 检测到 v6 patch,升级到 v7(加 /forgot + /user/reset)")
+elif v5_block_old in content:
+    new_content = content.replace(v5_block_old, v7_block, 1)
+    print("✓ 检测到 v5 patch,直接升级到 v7")
 elif v4_block_old in content:
-    new_content = content.replace(v4_block_old, v6_block, 1)
-    print("✓ 检测到 v4 patch,直接升级到 v6")
+    new_content = content.replace(v4_block_old, v7_block, 1)
+    print("✓ 检测到 v4 patch,直接升级到 v7")
 elif v3_block_old in content:
-    new_content = content.replace(v3_block_old, v6_block, 1)
-    print("✓ 检测到 v3 patch,直接升级到 v6")
+    new_content = content.replace(v3_block_old, v7_block, 1)
+    print("✓ 检测到 v3 patch,直接升级到 v7")
 elif v2_block in content:
-    new_content = content.replace(v2_block, v6_block, 1)
-    print("✓ 检测到 v2 patch,直接升级到 v6")
+    new_content = content.replace(v2_block, v7_block, 1)
+    print("✓ 检测到 v2 patch,直接升级到 v7")
 elif v1_block in content:
-    new_content = content.replace(v1_block, v6_block, 1)
-    print("✓ 检测到 v1 patch,直接升级到 v6")
+    new_content = content.replace(v1_block, v7_block, 1)
+    print("✓ 检测到 v1 patch,直接升级到 v7")
 elif original_block in content:
-    new_content = content.replace(original_block, v6_block, 1)
-    print("✓ 检测到原始 New API block,直接应用 v6")
+    new_content = content.replace(original_block, v7_block, 1)
+    print("✓ 检测到原始 New API block,直接应用 v7")
 else:
-    print("✗ 没找到匹配的块格式(v0..v5)")
+    print("✗ 没找到匹配的块格式(v0..v6)")
     print("  可能 nginx.conf 被手工改过。请把内容贴给 Claude 让它给特定的 patch")
     sys.exit(1)
 
@@ -410,6 +478,8 @@ test_route "/console/topup"    "200(Next.js)"
 test_route "/console/token"    "200(Next.js)"
 test_route "/console/log"      "200(Next.js)"
 test_route "/console/personal" "200(Next.js)"
+test_route "/forgot"           "200(Next.js)"
+test_route "/user/reset"       "200(Next.js)"
 test_route "/v1/models"        "401(New API)"
 
 echo ""
@@ -418,14 +488,19 @@ curl -s -I -H "Host: zhongzhuantoken.com" http://127.0.0.1/login | grep -iE "(x-
 
 echo ""
 echo "════════════════════════════════════════════════════════════════"
-echo "  ✓ v6 补丁完成 — /console/personal 也走自研 Next.js"
+echo "  ✓ v7 补丁完成 — /forgot + /user/reset 找回密码"
 echo "════════════════════════════════════════════════════════════════"
 echo ""
 echo "浏览器强刷(Cmd+Shift+R):"
-echo "  https://zhongzhuantoken.com/console/personal — 自研个人设置"
+echo "  https://zhongzhuantoken.com/forgot    — 自研找回密码"
+echo "  邮件点击 /user/reset?email=&token=    — 自研重置落地页"
 echo ""
-echo "其他 console 子页都已是自研:"
-echo "  /console /console/topup /console/token /console/log"
+echo "用户可见的页面 100% 已是自研:"
+echo "  / /pricing /docs /login /register /forgot /user/reset"
+echo "  /console /console/{topup,token,log,personal}"
+echo ""
+echo "仅以下保持 New API(管理员路径,普通用户看不到):"
+echo "  /admin /setup /console/channel /console/redemption ..."
 echo ""
 echo "回滚到上一版:"
 echo "  ls -t /www/server/nginx/conf/nginx.conf.bak.* | head -1 | xargs -I{} cp {} /www/server/nginx/conf/nginx.conf"

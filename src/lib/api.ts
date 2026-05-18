@@ -160,6 +160,22 @@ export const api = {
     );
   },
 
+  /** 找回密码 step 1:输邮箱触发,服务端发重置邮件(若邮箱已注册) */
+  sendPasswordResetEmail(email: string) {
+    return jsonFetch<null>(
+      `/api/reset_password?email=${encodeURIComponent(email)}`,
+      { method: "GET" },
+    );
+  },
+
+  /** 找回密码 step 2:校验 email+token,服务端生成新密码返回 */
+  resetPassword(email: string, token: string) {
+    return jsonFetch<string>("/api/user/reset", {
+      method: "POST",
+      body: JSON.stringify({ email, token }),
+    });
+  },
+
   /** 站点公开配置(quota_per_unit / usd_exchange_rate / ...) */
   status() {
     return jsonFetch<SiteStatus>("/api/status", { method: "GET" });
