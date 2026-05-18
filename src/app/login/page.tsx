@@ -8,7 +8,7 @@ import { AuthCard, FormError } from "@/components/auth-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { api, saveAuthState } from "@/lib/api";
+import { api, clearAuthState, getStoredUserId, saveAuthState } from "@/lib/api";
 
 function LoginInner() {
   const params = useSearchParams();
@@ -22,12 +22,21 @@ function LoginInner() {
   const [needs2FA, setNeeds2FA] = useState(false);
   const [code, setCode] = useState("");
 
-  // 已登录就直接跳走(走 hard navigation 因为 /console 不是 Next 路由)
+  // 已登录就直接跳走;但要先校验 localStorage 和服务端身份一致(防脏状态死循环)
   useEffect(() => {
     api.self().then((r) => {
-      if (r.success && r.data?.id) {
-        window.location.replace(redirectTo);
+      if (!r.success || !r.data?.id) return; // 未登录,留在 /login
+      const stored = getStoredUserId();
+      if (stored && stored !== String(r.data.id)) {
+        // session 和 localStorage 用户不一致 → 清掉 localStorage,留在 /login 重新登录
+        clearAuthState();
+        return;
       }
+      if (!stored) {
+        // 服务端认得我们但本地没存 uid → 补写,避免 /console SPA 不识别
+        saveAuthState(r.data);
+      }
+      window.location.replace(redirectTo);
     });
   }, [redirectTo]);
 
