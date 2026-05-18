@@ -4,6 +4,8 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
+
+
 import { AuthCard, FormError, FormSuccess } from "@/components/auth-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,12 +29,18 @@ function RegisterInner() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // 已登录就直接跳走
+  // 已登录就直接跳走(hard navigation)
   useEffect(() => {
     api.self().then((r) => {
-      if (r.success && r.data?.id) router.replace("/console");
+      if (r.success && r.data?.id) {
+        window.location.replace("/console");
+      }
     });
-  }, [router]);
+    // 把邀请码也写进 localStorage,New API 那边能识别
+    if (initialAffCode && typeof window !== "undefined") {
+      window.localStorage.setItem("aff", initialAffCode);
+    }
+  }, [initialAffCode]);
 
   async function sendCode() {
     if (!email) {

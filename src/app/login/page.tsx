@@ -2,16 +2,15 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import { AuthCard, FormError } from "@/components/auth-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { api } from "@/lib/api";
+import { api, saveAuthState } from "@/lib/api";
 
 function LoginInner() {
-  const router = useRouter();
   const params = useSearchParams();
   const redirectTo = params.get("redirect") || "/console";
 
@@ -23,12 +22,14 @@ function LoginInner() {
   const [needs2FA, setNeeds2FA] = useState(false);
   const [code, setCode] = useState("");
 
-  // 已登录就直接跳走
+  // 已登录就直接跳走(走 hard navigation 因为 /console 不是 Next 路由)
   useEffect(() => {
     api.self().then((r) => {
-      if (r.success && r.data?.id) router.replace(redirectTo);
+      if (r.success && r.data?.id) {
+        window.location.replace(redirectTo);
+      }
     });
-  }, [router, redirectTo]);
+  }, [redirectTo]);
 
   async function submitLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -44,7 +45,10 @@ function LoginInner() {
       setNeeds2FA(true);
       return;
     }
-    router.replace(redirectTo);
+    // 写 localStorage 让 /console 的 New API SPA 也能识别已登录
+    if (r.data) saveAuthState(r.data);
+    // hard reload 让 New API 的 /console SPA 重新初始化 localStorage
+    window.location.replace(redirectTo);
   }
 
   async function submit2FA(e: React.FormEvent) {
@@ -57,7 +61,8 @@ function LoginInner() {
       setError(r.message || "验证码错误");
       return;
     }
-    router.replace(redirectTo);
+    if (r.data) saveAuthState(r.data);
+    window.location.replace(redirectTo);
   }
 
   if (needs2FA) {
