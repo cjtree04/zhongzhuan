@@ -37,6 +37,8 @@ export type SelfUser = {
   aff_code: string;
   aff_count: number;
   aff_quota: number;
+  aff_history_quota: number;
+  inviter_id?: number;
 };
 
 export type LoginResult = {
@@ -157,4 +159,48 @@ export const api = {
       { method: "GET" },
     );
   },
+
+  /** 站点公开配置(quota_per_unit / usd_exchange_rate / ...) */
+  status() {
+    return jsonFetch<SiteStatus>("/api/status", { method: "GET" });
+  },
+
+  /** 当前用户的 API token 列表(分页) */
+  tokens(page = 0, pageSize = 20) {
+    return jsonFetch<Paginated<TokenRow>>(
+      `/api/token/?p=${page}&page_size=${pageSize}`,
+      { method: "GET" },
+    );
+  },
+};
+
+export type SiteStatus = {
+  version?: string;
+  quota_per_unit?: number;
+  usd_exchange_rate?: number;
+  display_in_currency?: boolean;
+  quota_display_type?: "USD" | "CNY" | "TOKENS" | "CUSTOM";
+  system_name?: string;
+};
+
+export type TokenRow = {
+  id: number;
+  user_id: number;
+  key: string; // masked
+  status: number; // 1 = enabled
+  name: string;
+  created_time: number;
+  accessed_time: number;
+  expired_time: number; // -1 = never
+  remain_quota: number;
+  unlimited_quota: boolean;
+  used_quota: number;
+  group: string;
+};
+
+export type Paginated<T> = {
+  items: T[];
+  page?: number;
+  page_size?: number;
+  total?: number;
 };

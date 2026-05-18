@@ -1,22 +1,24 @@
 #!/bin/bash
 # ─────────────────────────────────────────────────────────────────────────────
-# patch-bt-nginx.sh (v2) — 把宝塔 /www/server/nginx/conf/nginx.conf 里
+# patch-bt-nginx.sh (v3) — 把宝塔 /www/server/nginx/conf/nginx.conf 里
 # 443 SSL server 块的 catch-all location / 替换为路径路由:
 #
-#   /, /pricing, /docs, /_next, /favicon.ico, /login, /register → Next.js (:3100)
-#   其他全部(/console, /v1/*, /api/*, /token, /topup, /log, ...) → New API (:3000)
+#   /, /pricing, /docs, /_next, /favicon.ico,
+#   /login, /register, /console(精确匹配)→ Next.js (:3100)
+#   其他全部(/console/* 子路径, /v1/*, /api/*, /admin 等)→ New API (:3000)
 #
-# 脚本是幂等的:可重复跑。
-#   - 第一次跑:匹配原始 New API block,替换为 v2
-#   - 升级:匹配 v1 输出,替换为 v2
-#   - 已是 v2:跳过,只 reload
+# 脚本是幂等的,自动检测当前状态升级:
+#   - v0(原始 New API block)→ v3
+#   - v1(只有营销层路由)    → v3
+#   - v2(加了 /login /register) → v3
+#   - 已是 v3 → 跳过,只 reload
 # ─────────────────────────────────────────────────────────────────────────────
 
 set -e
 trap 'echo ""; echo "✗ 补丁脚本在第 $LINENO 行失败,退出"; exit 1' ERR
 
 NGINX_CONF="/www/server/nginx/conf/nginx.conf"
-V2_MARKER="zhongzhuan_web_v2_login_register"
+V2_MARKER="zhongzhuan_web_v3_console"
 
 if [ ! -f "$NGINX_CONF" ]; then
   echo "✗ 找不到 $NGINX_CONF — 这台机器可能没装宝塔"
@@ -97,7 +99,7 @@ v1_block = """        # zhongzhuan_web_3100_patched (marker, 不要删)
             proxy_pass http://127.0.0.1:3000;
         }"""
 
-# ─── v2:加 /login /register 路由 ───
+# ─── v2:加 /login /register 路由(无 /console) ───
 v2_block = """        # zhongzhuan_web_v2_login_register (marker, 不要删)
         # 通用代理 header,server 级,所有 location 继承
         proxy_http_version 1.1;
@@ -141,14 +143,65 @@ v2_block = """        # zhongzhuan_web_v2_login_register (marker, 不要删)
             proxy_pass http://127.0.0.1:3000;
         }"""
 
-if v1_block in content:
-    new_content = content.replace(v1_block, v2_block, 1)
-    print("✓ 检测到 v1 patch,升级到 v2(加 /login /register)")
+# ─── v3:加 /console 精确路由(子路径如 /console/token 仍走 New API) ───
+v3_block = """        # zhongzhuan_web_v3_console (marker, 不要删)
+        # 通用代理 header,server 级,所有 location 继承
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 600s;
+        proxy_send_timeout 600s;
+        send_timeout 600s;
+
+        # ── 自研前端 Next.js (:3100):营销 + 认证 + 控制台主页 ──
+        location = / {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location /pricing {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location /docs {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location /_next {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /favicon.ico {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /login {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /register {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        # 精确匹配 /console 走自研,子路径 /console/token 等仍走 New API
+        location = /console {
+            proxy_pass http://127.0.0.1:3100;
+        }
+
+        # ── 其他全部 (/console/* /v1/* /api/* /token /topup …) → New API (:3000) ──
+        location / {
+            proxy_pass http://127.0.0.1:3000;
+        }"""
+
+if v2_block in content:
+    new_content = content.replace(v2_block, v3_block, 1)
+    print("✓ 检测到 v2 patch,升级到 v3(加 /console)")
+elif v1_block in content:
+    new_content = content.replace(v1_block, v3_block, 1)
+    print("✓ 检测到 v1 patch,直接升级到 v3")
 elif original_block in content:
-    new_content = content.replace(original_block, v2_block, 1)
-    print("✓ 检测到原始 New API block,直接应用 v2")
+    new_content = content.replace(original_block, v3_block, 1)
+    print("✓ 检测到原始 New API block,直接应用 v3")
 else:
-    print("✗ 没找到匹配的块格式(v0 或 v1)")
+    print("✗ 没找到匹配的块格式(v0/v1/v2)")
     print("  可能 nginx.conf 被手工改过。请把内容贴给 Claude 让它给特定的 patch")
     sys.exit(1)
 
@@ -175,13 +228,14 @@ test_route() {
   code=$(curl -s -o /dev/null -w "%{http_code}" -H "Host: zhongzhuantoken.com" "http://127.0.0.1$path")
   printf "  %-20s → HTTP %s  (期望 %s)\n" "$path" "$code" "$expect"
 }
-test_route "/"           "200(Next.js)"
-test_route "/pricing"    "200(Next.js)"
-test_route "/docs"       "200(Next.js)"
-test_route "/login"      "200(Next.js)"
-test_route "/register"   "200(Next.js)"
-test_route "/console"    "200/302(New API)"
-test_route "/v1/models"  "401(New API)"
+test_route "/"             "200(Next.js)"
+test_route "/pricing"      "200(Next.js)"
+test_route "/docs"         "200(Next.js)"
+test_route "/login"        "200(Next.js)"
+test_route "/register"     "200(Next.js)"
+test_route "/console"      "200(Next.js)"
+test_route "/console/token" "200/302(New API,子路径仍旧)"
+test_route "/v1/models"    "401(New API)"
 
 echo ""
 echo "═══ 头部确认 (/login 应该来自 Next.js) ═══"
@@ -189,12 +243,14 @@ curl -s -I -H "Host: zhongzhuantoken.com" http://127.0.0.1/login | grep -iE "(x-
 
 echo ""
 echo "════════════════════════════════════════════════════════════════"
-echo "  ✓ v2 补丁完成 — /login /register 现在走自研 Next.js"
+echo "  ✓ v3 补丁完成 — /console 现在走自研 Next.js(子路径仍 New API)"
 echo "════════════════════════════════════════════════════════════════"
 echo ""
 echo "浏览器强刷:"
-echo "  https://zhongzhuantoken.com/login    — 应该是新登录页"
-echo "  https://zhongzhuantoken.com/register — 应该是新注册页"
+echo "  https://zhongzhuantoken.com/login    — 自研登录"
+echo "  https://zhongzhuantoken.com/register — 自研注册"
+echo "  https://zhongzhuantoken.com/console  — 自研控制台 v1(余额/Token/快捷入口)"
+echo "  https://zhongzhuantoken.com/console/token — 仍是 New API token 管理页"
 echo ""
 echo "回滚到上一版:"
 echo "  ls -t /www/server/nginx/conf/nginx.conf.bak.* | head -1 | xargs -I{} cp {} /www/server/nginx/conf/nginx.conf"
