@@ -167,14 +167,7 @@ echo 'export OPENAI_API_KEY="YOUR_KEY"' >> ~/.zshrc`}
               </li>
             </ul>
 
-            <Step n={1} title="一键安装(交互式选择通道)" />
-            <CodeBlock
-              lang="bash"
-              code={`curl -fsSL https://apikey.fun/install/openclaw.sh | sudo bash
-# 脚本会提示选择通道(Anthropic / OpenAI)并粘贴 API Key`}
-            />
-
-            <Step n={2} title="手动配置(可选)" />
+            <Step n={1} title="按通道配置环境变量" />
             <CodeBlock
               lang="bash"
               code={`# Anthropic 通道
@@ -187,40 +180,39 @@ export OPENAI_BASE_URL="${BASE}/v1"
 export OPENAI_API_KEY="YOUR_KEY"
 openclaw --provider openai --model gpt-5.5`}
             />
+            <Placeholder>
+              本站自有一键脚本仍在开发中,上线后会在本节附配置链接。
+            </Placeholder>
           </Section>
 
           {/* ───────────── Hermes ───────────── */}
           <Section id="hermes" title="Hermes" eyebrow="AGENT · 04">
             <p>
               轻量级编程 agent，默认走 OpenAI 兼容协议，也支持切换 Anthropic
-              通道。一键脚本会引导你完成配置。
+              通道。
             </p>
 
-            <Step n={1} title="一键安装" />
+            <Step n={1} title="写入 ~/.hermes/config.yaml" />
             <CodeBlock
               lang="bash"
-              code={`# macOS / Linux
-curl -fsSL https://apikey.fun/install/hermes.sh | sudo bash
-
-# Windows PowerShell
-irm https://apikey.fun/install/hermes.ps1 | iex`}
-            />
-
-            <Step n={2} title="手动配置" />
-            <CodeBlock
-              lang="bash"
-              code={`# 写入 ~/.hermes/config.yaml
-mkdir -p ~/.hermes
+              code={`mkdir -p ~/.hermes
 cat > ~/.hermes/config.yaml << 'EOF'
 provider: openai
 base_url: ${BASE}/v1
 api_key: YOUR_KEY
 model: gpt-5.5
-EOF
-
-# 启动
-hermes`}
+EOF`}
             />
+
+            <Step n={2} title="启动" />
+            <CodeBlock
+              lang="bash"
+              code={`hermes
+# 启动后即可对话`}
+            />
+            <Placeholder>
+              本站自有一键脚本仍在开发中,上线后会在本节附配置链接。
+            </Placeholder>
           </Section>
 
           {/* ───────────── SDK 直调 ───────────── */}
