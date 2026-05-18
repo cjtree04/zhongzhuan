@@ -37,15 +37,57 @@ step() {
 
 # ─── 1/9 装 Node 20 ──────────────────────────────────────────────────────────
 step "[1/9] 装 Node 20"
+
+install_node_via_nvm() {
+  echo "fallback: 用 NVM 装 Node 20..."
+  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+  export NVM_DIR="$HOME/.nvm"
+  # shellcheck disable=SC1091
+  . "$NVM_DIR/nvm.sh"
+  nvm install 20
+  nvm alias default 20
+  # 让 root / pm2 / systemd 等非交互 shell 也能找到 node
+  NODE_BIN="$NVM_DIR/versions/node/$(nvm version)/bin"
+  ln -sf "$NODE_BIN/node" /usr/local/bin/node
+  ln -sf "$NODE_BIN/npm"  /usr/local/bin/npm
+  ln -sf "$NODE_BIN/npx"  /usr/local/bin/npx
+}
+
+# 已装且 >= 20 就跳过
 if command -v node >/dev/null 2>&1; then
-  echo "Node 已装: $(node -v)"
-else
-  curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
-  dnf install -y nodejs
-  echo "✓ Node $(node -v)"
+  NODE_MAJOR=$(node -v | sed 's/v//' | cut -d. -f1)
+  if [ "$NODE_MAJOR" -ge 20 ]; then
+    echo "Node 已装: $(node -v)(满足 >=20,跳过)"
+  else
+    echo "Node 版本过低: $(node -v),升级中..."
+    NODE_MAJOR=0  # mark需要重装
+  fi
 fi
 
-# 切到 npmmirror(国内加速,可选但建议)
+if ! command -v node >/dev/null 2>&1 || [ "${NODE_MAJOR:-0}" -lt 20 ]; then
+  # 先试 dnf module(OpenCloudOS / RHEL 9 / Rocky 9 / Alma 9 都自带)
+  echo "尝试 dnf module install nodejs:20..."
+  dnf module reset nodejs -y 2>/dev/null || true
+  if dnf module install -y nodejs:20/common 2>&1 | tail -3 && command -v node >/dev/null 2>&1; then
+    echo "✓ Node $(node -v) via dnf module"
+  elif dnf install -y nodejs npm 2>&1 | tail -3 && command -v node >/dev/null 2>&1; then
+    NODE_MAJOR_INSTALLED=$(node -v | sed 's/v//' | cut -d. -f1)
+    if [ "$NODE_MAJOR_INSTALLED" -ge 20 ]; then
+      echo "✓ Node $(node -v) via dnf"
+    else
+      echo "dnf 装的 Node $(node -v) 版本不够,改用 NVM..."
+      install_node_via_nvm
+    fi
+  else
+    install_node_via_nvm
+  fi
+fi
+
+# 最终验证
+node --version
+npm --version
+
+# 切到 npmmirror(国内加速)
 npm config set registry https://registry.npmmirror.com
 echo "✓ npm registry: $(npm config get registry)"
 
