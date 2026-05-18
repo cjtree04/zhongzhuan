@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Bell, Check, Languages, Monitor, Moon, Sun } from "lucide-react"
+import { Bell, Check, Languages, LayoutDashboard, LogOut, Monitor, Moon, Sun, UserCircle } from "lucide-react"
 import { useTheme } from "next-themes"
 import { toast } from "sonner"
 
@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/lib/use-auth"
 import { cn } from "@/lib/utils"
 
 const LEFT_LINKS = [
@@ -27,6 +28,7 @@ export function NavBar() {
   const pathname = usePathname()
   const router = useRouter()
   const onHome = pathname === "/"
+  const { user, loading, logout } = useAuth()
 
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [themeMounted, setThemeMounted] = useState(false)
@@ -166,38 +168,85 @@ export function NavBar() {
             </DropdownMenuContent>
           </DropdownMenu>
           <div className="mx-1 h-5 w-px bg-border" />
-          <Button
-            variant="ghost"
-            size="sm"
-            nativeButton={false}
-            className="font-mono"
-            render={
-              <Link href="https://zhongzhuantoken.com/console" target="_top">
-                控制台
-              </Link>
-            }
-          />
-          <Button
-            variant="ghost"
-            size="sm"
-            nativeButton={false}
-            className="font-mono"
-            render={
-              <Link href="https://zhongzhuantoken.com/login" target="_top">
-                登录
-              </Link>
-            }
-          />
-          <Button
-            size="sm"
-            nativeButton={false}
-            className="font-mono"
-            render={
-              <Link href="https://zhongzhuantoken.com/register" target="_top">
-                注册
-              </Link>
-            }
-          />
+          {/* 登录态切换:loading 时啥都不显示(避免闪);已登录显示控制台 + 用户菜单;未登录显示登录/注册 */}
+          {loading ? (
+            <div className="w-[120px]" aria-hidden />
+          ) : user ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                nativeButton={false}
+                className="font-mono"
+                render={
+                  <Link href="/console" target="_top">
+                    <LayoutDashboard />
+                    控制台
+                  </Link>
+                }
+              />
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`已登录:${user.display_name || user.username}`}
+                      className="text-foreground"
+                    >
+                      <UserCircle />
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent align="end" sideOffset={6} className="font-mono min-w-44">
+                  <div className="border-b border-border px-2 py-2">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      已登录
+                    </div>
+                    <div className="mt-0.5 truncate text-sm font-semibold text-foreground">
+                      {user.display_name || user.username}
+                    </div>
+                  </div>
+                  <DropdownMenuItem
+                    render={
+                      <Link href="/console" target="_top">
+                        <LayoutDashboard className="mr-2 size-3.5" />
+                        控制台
+                      </Link>
+                    }
+                  />
+                  <DropdownMenuItem
+                    render={
+                      <Link href="/console/personal" target="_top">
+                        <UserCircle className="mr-2 size-3.5" />
+                        个人设置
+                      </Link>
+                    }
+                  />
+                  <DropdownMenuItem onClick={logout}>
+                    <LogOut className="mr-2 size-3.5" />
+                    退出登录
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                nativeButton={false}
+                className="font-mono"
+                render={<Link href="/login">登录</Link>}
+              />
+              <Button
+                size="sm"
+                nativeButton={false}
+                className="font-mono"
+                render={<Link href="/register">注册</Link>}
+              />
+            </>
+          )}
         </div>
       </div>
     </header>
