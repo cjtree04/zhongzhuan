@@ -173,6 +173,68 @@ export const api = {
     );
   },
 
+  /** 按关键词搜索 token */
+  tokenSearch(keyword: string) {
+    return jsonFetch<Paginated<TokenRow>>(
+      `/api/token/search?keyword=${encodeURIComponent(keyword)}`,
+      { method: "GET" },
+    );
+  },
+
+  /** 获取完整 key(敏感,有 rate limit) */
+  tokenGetKey(id: number) {
+    return jsonFetch<{ key: string }>(`/api/token/${id}/key`, {
+      method: "POST",
+    });
+  },
+
+  /** 创建 token */
+  tokenCreate(payload: TokenCreatePayload) {
+    return jsonFetch<null>("/api/token/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  /** 更新 token(包括 rename / 改额度 / 改过期等) */
+  tokenUpdate(payload: TokenUpdatePayload) {
+    return jsonFetch<null>("/api/token/", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  /** 仅切换 status(启用/禁用,后端识别 status_only 查询参数) */
+  tokenToggleStatus(id: number, status: number) {
+    return jsonFetch<null>("/api/token/?status_only=true", {
+      method: "PUT",
+      body: JSON.stringify({ id, status }),
+    });
+  },
+
+  /** 删除 token */
+  tokenDelete(id: number) {
+    return jsonFetch<null>(`/api/token/${id}`, { method: "DELETE" });
+  },
+
+  /** 当前用户的调用日志(分页 + 过滤) */
+  logs(params: LogQuery) {
+    const qs = new URLSearchParams();
+    qs.set("p", String(params.page ?? 0));
+    qs.set("page_size", String(params.pageSize ?? 20));
+    if (params.type !== undefined && params.type !== 0)
+      qs.set("type", String(params.type));
+    if (params.startTimestamp)
+      qs.set("start_timestamp", String(params.startTimestamp));
+    if (params.endTimestamp)
+      qs.set("end_timestamp", String(params.endTimestamp));
+    if (params.modelName) qs.set("model_name", params.modelName);
+    if (params.tokenName) qs.set("token_name", params.tokenName);
+    return jsonFetch<Paginated<LogRow>>(`/api/log/self?${qs}`, {
+      method: "GET",
+    });
+  },
+
   /** 充值配置(支付方式、最小充值、金额选项、折扣等) */
   topupInfo() {
     return jsonFetch<TopUpInfo>("/api/user/topup/info", { method: "GET" });
@@ -266,6 +328,30 @@ export type SiteStatus = {
   system_name?: string;
 };
 
+export type TokenCreatePayload = {
+  name: string;
+  unlimited_quota: boolean;
+  remain_quota: number;
+  expired_time: number; // -1 = never, else unix seconds
+  model_limits_enabled?: boolean;
+  model_limits?: string;
+  allow_ips?: string;
+  group?: string;
+};
+
+export type TokenUpdatePayload = {
+  id: number;
+  name?: string;
+  unlimited_quota?: boolean;
+  remain_quota?: number;
+  expired_time?: number;
+  status?: number;
+  model_limits_enabled?: boolean;
+  model_limits?: string;
+  allow_ips?: string;
+  group?: string;
+};
+
 export type TokenRow = {
   id: number;
   user_id: number;
@@ -286,4 +372,38 @@ export type Paginated<T> = {
   page?: number;
   page_size?: number;
   total?: number;
+};
+
+export type LogQuery = {
+  page?: number;
+  pageSize?: number;
+  type?: number; // 0=all/unknown, 1=topup, 2=consume, 3=manage, 4=system, 5=error, 6=refund
+  startTimestamp?: number; // unix seconds
+  endTimestamp?: number;
+  modelName?: string;
+  tokenName?: string;
+};
+
+export type LogRow = {
+  id: number;
+  user_id: number;
+  created_at: number;
+  type: number;
+  content: string;
+  username: string;
+  token_name: string;
+  model_name: string;
+  quota: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  use_time: number;
+  is_stream: boolean;
+  channel: number;
+  channel_name?: string;
+  token_id: number;
+  group: string;
+  ip: string;
+  request_id?: string;
+  upstream_request_id?: string;
+  other: string;
 };

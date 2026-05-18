@@ -1,21 +1,21 @@
 #!/bin/bash
 # ─────────────────────────────────────────────────────────────────────────────
-# patch-bt-nginx.sh (v4) — 把宝塔 /www/server/nginx/conf/nginx.conf 里
+# patch-bt-nginx.sh (v5) — 把宝塔 /www/server/nginx/conf/nginx.conf 里
 # 443 SSL server 块的 catch-all location / 替换为路径路由:
 #
 #   /, /pricing, /docs, /_next, /favicon.ico,
 #   /login, /register,
-#   /console(精确), /console/topup(精确)        → Next.js (:3100)
-#   其他全部(/console/token, /console/log 等)   → New API (:3000)
+#   /console, /console/topup, /console/token, /console/log → Next.js (:3100)
+#   其他 (/console/personal, /api/*, /v1/*, /admin) → New API (:3000)
 #
-# 脚本幂等,自动检测当前状态升级到 v4
+# 脚本幂等,自动检测当前状态升级到 v5
 # ─────────────────────────────────────────────────────────────────────────────
 
 set -e
 trap 'echo ""; echo "✗ 补丁脚本在第 $LINENO 行失败,退出"; exit 1' ERR
 
 NGINX_CONF="/www/server/nginx/conf/nginx.conf"
-V2_MARKER="zhongzhuan_web_v4_topup"
+V2_MARKER="zhongzhuan_web_v5_token_log"
 
 if [ ! -f "$NGINX_CONF" ]; then
   echo "✗ 找不到 $NGINX_CONF — 这台机器可能没装宝塔"
@@ -189,7 +189,7 @@ v3_block_old = """        # zhongzhuan_web_v3_console (marker, 不要删)
         }"""
 
 # ─── v4:加 /console/topup 精确路由 ───
-v4_block = """        # zhongzhuan_web_v4_topup (marker, 不要删)
+v4_block_old = """        # zhongzhuan_web_v4_topup (marker, 不要删)
         # 通用代理 header,server 级,所有 location 继承
         proxy_http_version 1.1;
         proxy_set_header Host $host;
@@ -238,20 +238,79 @@ v4_block = """        # zhongzhuan_web_v4_topup (marker, 不要删)
             proxy_pass http://127.0.0.1:3000;
         }"""
 
-if v3_block_old in content:
-    new_content = content.replace(v3_block_old, v4_block, 1)
-    print("✓ 检测到 v3 patch,升级到 v4(加 /console/topup)")
+# ─── v5:加 /console/token + /console/log 精确路由 ───
+v5_block = """        # zhongzhuan_web_v5_token_log (marker, 不要删)
+        # 通用代理 header,server 级,所有 location 继承
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 600s;
+        proxy_send_timeout 600s;
+        send_timeout 600s;
+
+        # ── 自研前端 Next.js (:3100):marketing + auth + console 主控 ──
+        location = / {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location /pricing {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location /docs {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location /_next {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /favicon.ico {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /login {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /register {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /console {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /console/topup {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /console/token {
+            proxy_pass http://127.0.0.1:3100;
+        }
+        location = /console/log {
+            proxy_pass http://127.0.0.1:3100;
+        }
+
+        # ── 其他 (/console/personal /admin /api/* /v1/* …) → New API (:3000) ──
+        location / {
+            proxy_pass http://127.0.0.1:3000;
+        }"""
+
+if v4_block_old in content:
+    new_content = content.replace(v4_block_old, v5_block, 1)
+    print("✓ 检测到 v4 patch,升级到 v5(加 /console/token + /console/log)")
+elif v3_block_old in content:
+    new_content = content.replace(v3_block_old, v5_block, 1)
+    print("✓ 检测到 v3 patch,直接升级到 v5")
 elif v2_block in content:
-    new_content = content.replace(v2_block, v4_block, 1)
-    print("✓ 检测到 v2 patch,直接升级到 v4")
+    new_content = content.replace(v2_block, v5_block, 1)
+    print("✓ 检测到 v2 patch,直接升级到 v5")
 elif v1_block in content:
-    new_content = content.replace(v1_block, v4_block, 1)
-    print("✓ 检测到 v1 patch,直接升级到 v4")
+    new_content = content.replace(v1_block, v5_block, 1)
+    print("✓ 检测到 v1 patch,直接升级到 v5")
 elif original_block in content:
-    new_content = content.replace(original_block, v4_block, 1)
-    print("✓ 检测到原始 New API block,直接应用 v4")
+    new_content = content.replace(original_block, v5_block, 1)
+    print("✓ 检测到原始 New API block,直接应用 v5")
 else:
-    print("✗ 没找到匹配的块格式(v0/v1/v2/v3)")
+    print("✗ 没找到匹配的块格式(v0/v1/v2/v3/v4)")
     print("  可能 nginx.conf 被手工改过。请把内容贴给 Claude 让它给特定的 patch")
     sys.exit(1)
 
@@ -278,15 +337,17 @@ test_route() {
   code=$(curl -s -o /dev/null -w "%{http_code}" -H "Host: zhongzhuantoken.com" "http://127.0.0.1$path")
   printf "  %-20s → HTTP %s  (期望 %s)\n" "$path" "$code" "$expect"
 }
-test_route "/"               "200(Next.js)"
-test_route "/pricing"        "200(Next.js)"
-test_route "/docs"           "200(Next.js)"
-test_route "/login"          "200(Next.js)"
-test_route "/register"       "200(Next.js)"
-test_route "/console"        "200(Next.js)"
-test_route "/console/topup"  "200(Next.js)"
-test_route "/console/token"  "200/302(New API,子路径仍旧)"
-test_route "/v1/models"      "401(New API)"
+test_route "/"                 "200(Next.js)"
+test_route "/pricing"          "200(Next.js)"
+test_route "/docs"             "200(Next.js)"
+test_route "/login"            "200(Next.js)"
+test_route "/register"         "200(Next.js)"
+test_route "/console"          "200(Next.js)"
+test_route "/console/topup"    "200(Next.js)"
+test_route "/console/token"    "200(Next.js)"
+test_route "/console/log"      "200(Next.js)"
+test_route "/console/personal" "200/302(New API,未自研)"
+test_route "/v1/models"        "401(New API)"
 
 echo ""
 echo "═══ 头部确认 (/login 应该来自 Next.js) ═══"
@@ -294,13 +355,15 @@ curl -s -I -H "Host: zhongzhuantoken.com" http://127.0.0.1/login | grep -iE "(x-
 
 echo ""
 echo "════════════════════════════════════════════════════════════════"
-echo "  ✓ v4 补丁完成 — /console/topup 也走自研 Next.js"
+echo "  ✓ v5 补丁完成 — /console/token + /console/log 也走自研 Next.js"
 echo "════════════════════════════════════════════════════════════════"
 echo ""
 echo "浏览器强刷:"
-echo "  https://zhongzhuantoken.com/console        — 自研控制台主页"
-echo "  https://zhongzhuantoken.com/console/topup  — 自研充值页(兑换码 + 在线支付 + 历史)"
-echo "  https://zhongzhuantoken.com/console/token  — 仍是 New API token 管理"
+echo "  https://zhongzhuantoken.com/console         — 自研控制台主页"
+echo "  https://zhongzhuantoken.com/console/topup   — 自研充值页"
+echo "  https://zhongzhuantoken.com/console/token   — 自研 Token CRUD"
+echo "  https://zhongzhuantoken.com/console/log     — 自研使用日志"
+echo "  https://zhongzhuantoken.com/console/personal — 仍是 New API 个人设置"
 echo ""
 echo "回滚到上一版:"
 echo "  ls -t /www/server/nginx/conf/nginx.conf.bak.* | head -1 | xargs -I{} cp {} /www/server/nginx/conf/nginx.conf"
