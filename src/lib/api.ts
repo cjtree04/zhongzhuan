@@ -172,6 +172,89 @@ export const api = {
       { method: "GET" },
     );
   },
+
+  /** 充值配置(支付方式、最小充值、金额选项、折扣等) */
+  topupInfo() {
+    return jsonFetch<TopUpInfo>("/api/user/topup/info", { method: "GET" });
+  },
+
+  /** 用户充值记录 */
+  topupHistory() {
+    return jsonFetch<TopUpRecord[]>("/api/user/topup/self", { method: "GET" });
+  },
+
+  /** 兑换码兑换 */
+  topupRedeem(key: string) {
+    return jsonFetch<number>("/api/user/topup", {
+      method: "POST",
+      body: JSON.stringify({ key }),
+    });
+  },
+
+  /** 在线充值预览(算实付金额) */
+  topupAmount(amount: number) {
+    return jsonFetch<{ pay_money: number }>("/api/user/amount", {
+      method: "POST",
+      body: JSON.stringify({ amount }),
+    });
+  },
+
+  /**
+   * 拉起易支付。注意:这个接口返回 shape 是 {message: "success"|"error", data, url},
+   * 不是标准 {success, data}。要单独处理。
+   */
+  async topupRequestEpay(amount: number, payment_method: string) {
+    try {
+      const res = await fetch("/api/user/pay", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(getStoredUserId()
+            ? { "New-Api-User": getStoredUserId() as string }
+            : {}),
+        },
+        body: JSON.stringify({ amount, payment_method }),
+      });
+      const data = (await res.json()) as {
+        message: string;
+        data: Record<string, string> | string;
+        url?: string;
+      };
+      return data;
+    } catch {
+      return { message: "error", data: "网络错误" };
+    }
+  },
+};
+
+export type PayMethod = {
+  name: string;
+  type: string;
+  color?: string;
+  min_topup?: string;
+};
+
+export type TopUpInfo = {
+  pay_methods: PayMethod[];
+  min_topup: number;
+  amount_options?: number[];
+  discount?: Record<string, number>;
+  topup_link?: string;
+  stripe_min_topup?: number;
+};
+
+export type TopUpRecord = {
+  id: number;
+  user_id: number;
+  amount: number;
+  money: number;
+  trade_no: string;
+  payment_method: string;
+  payment_provider?: string;
+  create_time: number;
+  complete_time?: number;
+  status: string; // "pending" | "success" | "failed" | "cancelled"
 };
 
 export type SiteStatus = {
