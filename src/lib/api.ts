@@ -3,9 +3,9 @@
  *
  * 所有请求走同域 /api/*(nginx 反代到 New API Docker :3000)。
  *
- * 认证模型(New API 用双轨制,缺一不可):
+ * 认证模型(New API 用双轨制，缺一不可):
  *   1) `session` cookie    — 服务端 Gin sessions 颁发,credentials: "include" 自动带
- *   2) `New-Api-User: <id>` header — 客户端必须显式塞,服务端从这里取 user_id
+ *   2) `New-Api-User: <id>` header — 客户端必须显式塞，服务端从这里取 user_id
  *
  * 第 2 步是关键:仅有 cookie 时 protected 接口直接 401,
  * 错误信息会是 "Unauthorized, New-Api-User header not provided"。
@@ -68,7 +68,7 @@ export function getStoredUserId(): string | null {
   return null;
 }
 
-/** 登录/2FA 成功后调用,把用户信息同时写两个 key,兼容 New API 两套主题 */
+/** 登录/2FA 成功后调用，把用户信息同时写两个 key,兼容 New API 两套主题 */
 export function saveAuthState(user: {
   id?: number;
   username?: string;
@@ -113,7 +113,7 @@ async function jsonFetch<T>(
     const data = (await res.json()) as ApiResponse<T>;
     return data;
   } catch {
-    return { success: false, message: "网络错误,请稍后重试" };
+    return { success: false, message: "网络错误，请稍后重试" };
   }
 }
 
@@ -160,7 +160,7 @@ export const api = {
     );
   },
 
-  /** 找回密码 step 1:输邮箱触发,服务端发重置邮件(若邮箱已注册) */
+  /** 找回密码 step 1:输邮箱触发，服务端发重置邮件(若邮箱已注册) */
   sendPasswordResetEmail(email: string) {
     return jsonFetch<null>(
       `/api/reset_password?email=${encodeURIComponent(email)}`,
@@ -197,7 +197,7 @@ export const api = {
     );
   },
 
-  /** 获取完整 key(敏感,有 rate limit) */
+  /** 获取完整 key(敏感，有 rate limit) */
   tokenGetKey(id: number) {
     return jsonFetch<{ key: string }>(`/api/token/${id}/key`, {
       method: "POST",
@@ -220,7 +220,7 @@ export const api = {
     });
   },
 
-  /** 仅切换 status(启用/禁用,后端识别 status_only 查询参数) */
+  /** 仅切换 status(启用/禁用，后端识别 status_only 查询参数) */
   tokenToggleStatus(id: number, status: number) {
     return jsonFetch<null>("/api/token/?status_only=true", {
       method: "PUT",
@@ -320,7 +320,7 @@ export const api = {
     });
   },
 
-  /** 软删除当前账号(不可逆,前端必须做二次确认) */
+  /** 软删除当前账号(不可逆，前端必须做二次确认) */
   deleteSelf() {
     return jsonFetch<null>("/api/user/self", { method: "DELETE" });
   },
@@ -400,7 +400,7 @@ export type UpdateSelfPayload = {
   password?: string;
 };
 
-/** New API dto.UserSetting 的子集,前端用到哪个就传哪个 */
+/** New API dto.UserSetting 的子集，前端用到哪个就传哪个 */
 export type UserSettingPayload = Partial<{
   notify_type: "email" | "webhook" | "bark" | "gotify";
   quota_warning_threshold: number;

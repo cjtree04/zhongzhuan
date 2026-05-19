@@ -52,7 +52,7 @@ export default function ConsolePage() {
   const [noticeDismissed, setNoticeDismissed] = useState(false);
 
   useEffect(() => {
-    // 公开,即使未登录也能拉
+    // 公开，即使未登录也能拉
     api.status().then((r) => {
       if (r.success && r.data) setStatus(r.data);
     });
@@ -376,7 +376,7 @@ function TokenRowDisplay({
   const [copied, setCopied] = useState(false);
 
   async function copyMaskedKey() {
-    // masked key 复制无意义,但用户体验上需要一个反馈
+    // masked key 复制无意义，但用户体验上需要一个反馈
     try {
       await navigator.clipboard.writeText(`sk-${token.key}`);
       setCopied(true);

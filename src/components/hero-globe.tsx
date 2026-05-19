@@ -17,8 +17,8 @@ import Zhipu from "@lobehub/icons/es/Zhipu";
 
 import { cn } from "@/lib/utils";
 
-// lobehub 每家 logo 的 CompoundedIcon 类型互不兼容,这里用通用 component 类型
-// 兜底 (size / className / style 都是字符串/数字,够用)。
+// lobehub 每家 logo 的 CompoundedIcon 类型互不兼容，这里用通用 component 类型
+// 兜底 (size / className / style 都是字符串/数字，够用)。
 type IconComponent = ComponentType<{
   size?: number | string;
   className?: string;

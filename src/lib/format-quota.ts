@@ -3,8 +3,8 @@
  *
  * 我们站的"名义余额"是美元 quota,1 quota = 1 / quota_per_unit USD。
  * 控制台展示:
- *   主显示 = $X.XX (美元,大字)
- *   副显示 = ≈ ¥X.XX (人民币,小灰字,按充值汇率 TOPUP_RATE 换算)
+ *   主显示 = $X.XX (美元，大字)
+ *   副显示 = ≈ ¥X.XX (人民币，小灰字，按充值汇率 TOPUP_RATE 换算)
  */
 
 import { TOPUP_RATE } from "@/lib/pricing";
@@ -18,12 +18,12 @@ export function quotaToUsd(quota: number, status: SiteStatus | null): number {
   return quota / perUnit;
 }
 
-/** quota → "$X.XX" 美元字符串(主显示,固定 2 位小数;用于控制台余额/消耗/奖励等汇总值) */
+/** quota → "$X.XX" 美元字符串(主显示，固定 2 位小数;用于控制台余额/消耗/奖励等汇总值) */
 export function formatUsd(quota: number, status: SiteStatus | null): string {
   return `$${quotaToUsd(quota, status).toFixed(2)}`;
 }
 
-/** quota → "$X.XXXX" 美元字符串(高精度,用于单条日志/明细等小数额场景) */
+/** quota → "$X.XXXX" 美元字符串(高精度，用于单条日志/明细等小数额场景) */
 export function formatUsdPrecise(quota: number, status: SiteStatus | null): string {
   const usd = quotaToUsd(quota, status);
   if (usd >= 100) return `$${usd.toFixed(2)}`;
@@ -32,7 +32,7 @@ export function formatUsdPrecise(quota: number, status: SiteStatus | null): stri
   return `$${usd.toFixed(6)}`;
 }
 
-/** quota → "≈ ¥X.XX" 人民币换算(副显示,按充值汇率 TOPUP_RATE) */
+/** quota → "≈ ¥X.XX" 人民币换算(副显示，按充值汇率 TOPUP_RATE) */
 export function formatRmbHint(quota: number, status: SiteStatus | null): string {
   const cny = quotaToUsd(quota, status) * TOPUP_RATE;
   if (cny >= 100) return `≈ ¥${cny.toFixed(0)}`;

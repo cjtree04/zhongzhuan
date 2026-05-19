@@ -198,7 +198,7 @@ function ProfileSection({ user }: { user: SelfUser }) {
     const r = await api.sendEmailVerification(email);
     setCodeSending(false);
     if (!r.success) {
-      setEmailError(r.message || "发送失败,请稍后重试");
+      setEmailError(r.message || "发送失败，请稍后重试");
       return;
     }
     setEmailSuccess(`验证码已发送到 ${email},5 分钟内有效`);
@@ -218,7 +218,7 @@ function ProfileSection({ user }: { user: SelfUser }) {
     const r = await api.bindEmail({ email, code: verifyCode.trim() });
     setEmailSaving(false);
     if (!r.success) {
-      setEmailError(r.message || "换绑失败,验证码可能错误或已过期");
+      setEmailError(r.message || "换绑失败，验证码可能错误或已过期");
       return;
     }
     setEmailSuccess("邮箱已更换,2 秒后刷新…");
@@ -492,7 +492,7 @@ function PasswordForm() {
       setError(r.message || "修改失败");
       return;
     }
-    setSuccess("密码已更新,下次登录请使用新密码");
+    setSuccess("密码已更新，下次登录请使用新密码");
     setOriginal("");
     setPw1("");
     setPw2("");
@@ -627,7 +627,7 @@ function TwoFAControl() {
             )}
           </div>
           <div className="font-mono text-[11px] text-muted-foreground/80">
-            2FA 启用/关闭流程在 New API 默认主题 personal 页操作,本前端暂未实现 setup UI。
+            2FA 启用/关闭流程在 New API 默认主题 personal 页操作，本前端暂未实现 setup UI。
           </div>
         </div>
       ) : null}
@@ -639,8 +639,8 @@ function TwoFAControl() {
 // 通知区块
 // ─────────────────────────────────────────────────────────
 const NOTIFY_OPTIONS: { value: UserSettingPayload["notify_type"]; label: string; hint: string }[] = [
-  { value: "email", label: "邮箱", hint: "默认走账户邮箱,可指定其他邮箱" },
-  { value: "webhook", label: "Webhook", hint: "POST 自定义回调地址,可设 secret" },
+  { value: "email", label: "邮箱", hint: "默认走账户邮箱，可指定其他邮箱" },
+  { value: "webhook", label: "Webhook", hint: "POST 自定义回调地址，可设 secret" },
   { value: "bark", label: "Bark", hint: "iOS 推送(填写 Bark URL)" },
   { value: "gotify", label: "Gotify", hint: "自建消息推送服务" },
 ];
@@ -697,7 +697,7 @@ function NotificationSection() {
       icon={Bell}
       eyebrow="NOTIFY · 03"
       title="通知与额度预警"
-      desc="配额低于阈值时,系统会通过选定渠道提醒。"
+      desc="配额低于阈值时，系统会通过选定渠道提醒。"
     >
       <form onSubmit={save} className="space-y-4">
         <div className="space-y-2">
@@ -744,7 +744,7 @@ function NotificationSection() {
             disabled={saving}
           />
           <div className="font-mono text-[10px] text-muted-foreground/70">
-            余额低于此数值时,会按选定渠道触发一次通知。
+            余额低于此数值时，会按选定渠道触发一次通知。
           </div>
         </div>
 
@@ -929,7 +929,7 @@ function AffiliateSection({
       setError(r.message || "转入失败");
       return;
     }
-    setSuccess("已转入账户余额,刷新后生效");
+    setSuccess("已转入账户余额，刷新后生效");
     setTransferAmount(0);
   }
 
@@ -938,7 +938,7 @@ function AffiliateSection({
       icon={Gift}
       eyebrow="AFFILIATE · 04"
       title="邀请奖励"
-      desc="邀请新用户注册并完成首次充值后,你将获得奖励额度。"
+      desc="邀请新用户注册并完成首次充值后，你将获得奖励额度。"
     >
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="space-y-3">
@@ -1014,7 +1014,7 @@ function AffiliateSection({
         <FormError message={error} />
         <FormSuccess message={success} />
         <div className="mt-2 font-mono text-[10px] text-muted-foreground/70">
-          说明:若管理员未开启支付合规校验,本接口可能直接返回错误,请按提示处理。
+          说明:若管理员未开启支付合规校验，本接口可能直接返回错误，请按提示处理。
         </div>
       </div>
     </Section>

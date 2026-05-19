@@ -551,7 +551,7 @@ function TokenFormDialog({
           <DialogDescription className="font-mono text-xs">
             {isEdit
               ? `修改 ${editing?.name || `#${editing?.id}`} 的配置`
-              : "Token 是调用 API 的凭证,请妥善保管"}
+              : "Token 是调用 API 的凭证，请妥善保管"}
           </DialogDescription>
         </DialogHeader>
 
@@ -675,7 +675,7 @@ function DeleteConfirmDialog({
             <strong className="text-foreground">
               {token?.name || `Token #${token?.id}`}
             </strong>{" "}
-            将被永久删除。正在使用此 key 的客户端会立刻调用失败,该操作不可恢复。
+            将被永久删除。正在使用此 key 的客户端会立刻调用失败，该操作不可恢复。
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

@@ -11,8 +11,8 @@ import { Label } from "@/components/ui/label";
 import { api, clearAuthState, getStoredUserId, saveAuthState } from "@/lib/api";
 
 /**
- * 把外部传入的 redirect 参数夹到「站内相对路径」内,避免开放重定向。
- * 规则:必须以 `/` 开头,且不能是 `//foo`、`/\foo` 这种协议相对的形式。
+ * 把外部传入的 redirect 参数夹到「站内相对路径」内，避免开放重定向。
+ * 规则:必须以 `/` 开头，且不能是 `//foo`、`/\foo` 这种协议相对的形式。
  * 不合法时直接落回 `/console`。
  */
 function safeRedirect(raw: string | null): string {
@@ -42,7 +42,7 @@ function LoginInner() {
   // 已登录就直接跳走;但要先校验 localStorage 和服务端身份一致(防脏状态死循环)
   useEffect(() => {
     api.self().then((r) => {
-      if (!r.success || !r.data?.id) return; // 未登录,留在 /login
+      if (!r.success || !r.data?.id) return; // 未登录，留在 /login
       const stored = getStoredUserId();
       if (stored && stored !== String(r.data.id)) {
         // session 和 localStorage 用户不一致 → 清掉 localStorage,留在 /login 重新登录
@@ -50,7 +50,7 @@ function LoginInner() {
         return;
       }
       if (!stored) {
-        // 服务端认得我们但本地没存 uid → 补写,避免 /console SPA 不识别
+        // 服务端认得我们但本地没存 uid → 补写，避免 /console SPA 不识别
         saveAuthState(r.data);
       }
       window.location.replace(redirectTo);
@@ -147,7 +147,7 @@ function LoginInner() {
     <AuthCard
       eyebrow="LOGIN · 登录"
       title="登录到 Zhongzhuan Token"
-      subtitle="用户名或邮箱 + 密码,登录后进入控制台。"
+      subtitle="用户名或邮箱 + 密码，登录后进入控制台。"
     >
       <form onSubmit={submitLogin} className="space-y-5">
         <div className="space-y-2">

@@ -135,7 +135,7 @@ export const PROVIDERS: ProviderTab[] = [
     id: "gpt",
     name: "OpenAI",
     tabLabel: "GPT",
-    description: "GPT-5 全系模型,含 codex、mini、图像生成。",
+    description: "GPT-5 全系模型，含 codex、mini、图像生成。",
     full: GPT,
   },
   {

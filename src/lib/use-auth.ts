@@ -13,7 +13,7 @@ type AuthState = {
 
 /**
  * 客户端 hook,挂载时通过 /api/user/self 拉用户信息。
- * 注意:NavBar 在 layout.tsx 里,每次路由都会重新挂载 → 每次会发一次 self()。
+ * 注意:NavBar 在 layout.tsx 里，每次路由都会重新挂载 → 每次会发一次 self()。
  * 实际场景下浏览器会自动缓存(Cache-Control 我们的 api 没禁用),不会真打到 origin。
  */
 export function useAuth(): AuthState {

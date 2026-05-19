@@ -35,7 +35,7 @@ function ResetInner() {
       if (typeof pwd === "string" && pwd) {
         setNewPassword(pwd);
       } else {
-        setError("服务端未返回新密码,请联系客服");
+        setError("服务端未返回新密码，请联系客服");
       }
     });
   }, [email, token]);
@@ -56,7 +56,7 @@ function ResetInner() {
       <AuthCard
         eyebrow="VERIFYING · 验证中"
         title="正在重置密码"
-        subtitle="校验链接有效性,这一步不会让你输任何东西。"
+        subtitle="校验链接有效性，这一步不会让你输任何东西。"
       >
         <div className="flex items-center justify-center py-8 font-mono text-sm text-muted-foreground">
           <Loader2 className="mr-2 size-4 animate-spin" />
@@ -71,7 +71,7 @@ function ResetInner() {
       <AuthCard
         eyebrow="FAILED · 重置失败"
         title="链接已失效"
-        subtitle="出于安全考虑,重置链接 30 分钟过期,且只能使用一次。"
+        subtitle="出于安全考虑，重置链接 30 分钟过期，且只能使用一次。"
       >
         <div className="space-y-5">
           <FormError message={error} />
@@ -95,14 +95,14 @@ function ResetInner() {
     <AuthCard
       eyebrow="RESET · 新密码已生成"
       title="妥善保管这个密码"
-      subtitle="出于安全考虑,我们生成了一个一次性密码。立刻复制并去登录,然后在「个人设置」里改成你记得住的。"
+      subtitle="出于安全考虑，我们生成了一个一次性密码。立刻复制并去登录，然后在「个人设置」里改成你记得住的。"
     >
       <div className="space-y-5">
         <div className="flex items-start gap-3 border border-amber-500/30 bg-amber-500/10 p-4">
           <AlertTriangle className="size-5 shrink-0 text-amber-600 dark:text-amber-400" />
           <div className="font-mono text-xs leading-relaxed text-amber-700 dark:text-amber-300">
             <strong>关闭此页后将无法再次看到。</strong>
-            如不慎丢失,需重新走找回流程。
+            如不慎丢失，需重新走找回流程。
           </div>
         </div>
 

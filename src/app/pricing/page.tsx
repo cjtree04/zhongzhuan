@@ -4,7 +4,7 @@ import { GROUP_RATIO, TOPUP_RATE, USD_TO_CNY } from "@/lib/pricing";
 export const metadata = {
   title: "价格 — Zhongzhuan Token",
   description:
-    "Claude · GPT-5 · Gemini 全系完整价格。¥0.42 = $1 美元额度,按官方价扣费,Claude 倍率 3×。",
+    "Claude · GPT-5 · Gemini 全系完整价格。¥0.42 = $1 美元额度，按官方价扣费,Claude 倍率 3×。",
 };
 
 export default function PricingPage() {
@@ -19,11 +19,9 @@ export default function PricingPage() {
             <span className="text-brand">¥{TOPUP_RATE}</span> = $1 美元额度
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
-            Claude · GPT-5 · Gemini 全系,共 20 个模型,按厂商官方价计费。
-            主价是你的实际人民币成本,
-            下方灰字是官方按真实汇率 <span className="font-mono text-foreground">¥{USD_TO_CNY}/$1</span> 折算的成本对照。
-            Claude 系列模型名后带 <span className="font-mono text-amber-600 dark:text-amber-400">×{GROUP_RATIO.claude}</span> 徽标,
-            表示实际扣 <span className="font-mono text-foreground">${GROUP_RATIO.claude}</span> 美元额度 = ¥{(GROUP_RATIO.claude * TOPUP_RATE).toFixed(2)}。
+            Claude · GPT-5 · Gemini 全系，共 20 个模型，按厂商官方价计费。
+            主价是你的实际人民币成本，下方灰字是官方按真实汇率 <span className="font-mono text-foreground">¥{USD_TO_CNY}/$1</span> 折算的成本对照。
+            Claude 系列模型名后带 <span className="font-mono text-amber-600 dark:text-amber-400">×{GROUP_RATIO.claude}</span> 徽标，表示实际扣 <span className="font-mono text-foreground">${GROUP_RATIO.claude}</span> 美元额度 = ¥{(GROUP_RATIO.claude * TOPUP_RATE).toFixed(2)}。
           </p>
         </div>
 

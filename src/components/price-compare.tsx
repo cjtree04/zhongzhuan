@@ -23,10 +23,10 @@ export function PriceCompare() {
             PRICING · 价格优势
           </div>
           <h2 className="font-mono text-3xl font-semibold tracking-tight md:text-5xl">
-            一次充值,按量扣费
+            一次充值，按量扣费
           </h2>
           <p className="mt-4 text-sm text-muted-foreground md:text-base">
-            没有订阅,没有阶梯,没有套餐。充多少用多少,余额永不过期。
+            没有订阅，没有阶梯，没有套餐。充多少用多少，余额永不过期。
           </p>
         </div>
 
@@ -49,7 +49,7 @@ export function PriceCompare() {
               充值 <span className="text-foreground">¥40</span> 即得 <span className="text-foreground">$100</span> 美元额度
             </div>
             <div className="mt-6 max-w-xl text-xs leading-relaxed text-muted-foreground md:text-sm">
-              按厂商官方价扣额度,实际成本相比直接走官方({" "}
+              按厂商官方价扣额度，实际成本相比直接走官方({" "}
               <span className="font-mono">¥{USD_TO_CNY}/$1</span>
               {" "}市场汇率)节省高达{" "}
               <span className="font-mono font-semibold text-brand">{headlineSavings}%</span>。
@@ -86,9 +86,9 @@ export function PriceCompare() {
             title="永不过期"
             desc={
               <>
-                按量扣费,余额不限期使用
+                按量扣费，余额不限期使用
                 <br />
-                没有订阅锁定,没有最低消费
+                没有订阅锁定，没有最低消费
               </>
             }
           />
@@ -116,7 +116,7 @@ export function PriceCompare() {
           />
         </div>
 
-        {/* Small claude ratio footnote (用户原始需求要求标注,但不能显眼) */}
+        {/* Small claude ratio footnote (用户原始需求要求标注，但不能显眼) */}
         <div className="mt-10 text-center font-mono text-[10px] text-muted-foreground/60">
           * Claude 系列倍率 {GROUP_RATIO.claude}×,详见{" "}
           <Link href="/pricing" className="underline-offset-2 hover:underline hover:text-brand">

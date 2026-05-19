@@ -56,7 +56,7 @@ function RegisterInner() {
       setError(r.message || "邮件发送失败");
       return;
     }
-    setSuccess("验证码已发送,请查收邮箱(含垃圾邮件)");
+    setSuccess("验证码已发送，请查收邮箱(含垃圾邮件)");
   }
 
   async function submit(e: React.FormEvent) {
@@ -96,7 +96,7 @@ function RegisterInner() {
     <AuthCard
       eyebrow="REGISTER · 注册"
       title="创建你的账号"
-      subtitle="注册后送测试额度,无需绑卡。注册即视为同意服务条款。"
+      subtitle="注册后送测试额度，无需绑卡。注册即视为同意服务条款。"
     >
       <form onSubmit={submit} className="space-y-5">
         <div className="space-y-2">
@@ -115,7 +115,7 @@ function RegisterInner() {
             onChange={(e) => setUsername(e.target.value)}
             className="font-mono"
             disabled={loading}
-            placeholder="4-12 位,字母数字下划线"
+            placeholder="4-12 位，字母数字下划线"
           />
         </div>
 
@@ -186,7 +186,7 @@ function RegisterInner() {
         {email ? (
           <div className="space-y-2">
             <Label htmlFor="r_code" className="font-mono text-[11px] uppercase tracking-wider">
-              邮箱验证码 <span className="text-muted-foreground/70">(可选,若已发送)</span>
+              邮箱验证码 <span className="text-muted-foreground/70">(可选，若已发送)</span>
             </Label>
             <Input
               id="r_code"
@@ -215,7 +215,7 @@ function RegisterInner() {
             onChange={(e) => setAffCode(e.target.value)}
             className="font-mono"
             disabled={loading}
-            placeholder="有邀请人填写,双方获奖励"
+            placeholder="有邀请人填写，双方获奖励"
           />
         </div>
 

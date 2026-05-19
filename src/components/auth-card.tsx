@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** 居中认证卡片容器:hero/feature/faq 的精简版,适合 login/register/forgot 用 */
+/** 居中认证卡片容器:hero/feature/faq 的精简版，适合 login/register/forgot 用 */
 export function AuthCard({
   eyebrow,
   title,
