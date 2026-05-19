@@ -242,7 +242,7 @@ export default function TopUpPage() {
             </div>
             <div className="font-mono text-xs leading-relaxed text-muted-foreground md:text-sm">
               充 ¥{(TOPUP_RATE * 100).toFixed(0)} 得 $100 美元额度，按厂商官方价扣费(Claude {GROUP_RATIO.claude}× 倍率)。
-              余额永不过期，不接受退款，按需充值。
+              余额永不过期，按需充值。
             </div>
           </div>
         </div>
