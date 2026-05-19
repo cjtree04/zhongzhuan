@@ -26,17 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/use-auth";
 
-const DEFAULT_QUOTA_PER_UNIT = 500000;
-const DEFAULT_USD_RATE = 1;
-
-function formatRmb(quota: number, status: SiteStatus | null): string {
-  const perUnit = status?.quota_per_unit || DEFAULT_QUOTA_PER_UNIT;
-  const rate = status?.usd_exchange_rate || DEFAULT_USD_RATE;
-  const cny = (quota / perUnit) * rate;
-  if (cny >= 10) return `¥${cny.toFixed(2)}`;
-  if (cny >= 0.01) return `¥${cny.toFixed(3)}`;
-  return `¥${cny.toFixed(4)}`;
-}
+import { formatRmbHint, formatUsd } from "@/lib/format-quota";
 
 function formatTime(unix: number): string {
   if (!unix) return "—";
@@ -285,7 +275,10 @@ export default function LogPage() {
                 本页消耗
               </div>
               <div className="mt-1 font-mono text-lg font-semibold text-brand">
-                {formatRmb(summary.totalCost, status)}
+                {formatUsd(summary.totalCost, status)}
+              </div>
+              <div className="font-mono text-[10px] text-muted-foreground">
+                {formatRmbHint(summary.totalCost, status)}
               </div>
             </div>
             <div className="bg-background p-4">
@@ -447,7 +440,7 @@ function LogRowDisplay({
       {/* 消耗 */}
       <div className="col-span-1 lg:col-span-1">
         <div className="font-mono text-sm font-semibold text-brand">
-          {log.quota > 0 ? formatRmb(log.quota, status) : "—"}
+          {log.quota > 0 ? formatUsd(log.quota, status) : "—"}
         </div>
       </div>
 

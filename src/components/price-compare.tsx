@@ -1,184 +1,153 @@
-"use client";
-
 import Link from "next/link";
+import { ArrowRight, Boxes, Infinity as InfinityIcon, TrendingDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  PROVIDERS,
+  GROUP_RATIO,
   TOPUP_RATE,
   USD_TO_CNY,
-  formatRmb,
-  maxSavings,
-  officialRmb,
-  ourRmb,
   savingsPercentFor,
-  type ModelRow,
 } from "@/lib/pricing";
 
 export function PriceCompare() {
+  // GPT/Gemini 节省最猛(1x 倍率),用它做大头条
+  const headlineSavings = savingsPercentFor("gpt");
+  const claudeSavings = savingsPercentFor("claude");
+
   return (
     <section id="pricing" className="scroll-mt-20 border-b border-border">
       <div className="mx-auto max-w-7xl px-6 py-24 md:py-32">
-        <div className="mb-12 max-w-2xl">
+        {/* Header */}
+        <div className="mb-12 text-center md:mb-16">
           <div className="mb-3 font-mono text-[11px] uppercase tracking-wider text-brand">
-            PRICING · 价格
+            PRICING · 价格优势
           </div>
-          <h2 className="font-mono text-3xl font-semibold tracking-tight md:text-4xl">
-            本站价格 vs 官方真实成本
+          <h2 className="font-mono text-3xl font-semibold tracking-tight md:text-5xl">
+            一次充值,按量扣费
           </h2>
           <p className="mt-4 text-sm text-muted-foreground md:text-base">
-            下表展示旗舰模型对比，
-            <Link href="/pricing" className="font-medium text-brand underline-offset-2 hover:underline">
-              查看完整价格表 →
-            </Link>
+            没有订阅,没有阶梯,没有套餐。充多少用多少,余额永不过期。
           </p>
         </div>
 
-        <Tabs defaultValue="claude" className="gap-0">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border border-border bg-secondary/40 p-1.5">
-            <TabsList variant="line" className="gap-1 bg-transparent">
-              {PROVIDERS.map((p) => (
-                <TabsTrigger key={p.id} value={p.id} className="font-mono px-3">
-                  {p.tabLabel}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            <div className="px-2 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-              单位:人民币 / 1M tokens
+        {/* Hero rate */}
+        <div className="mb-12 border border-border bg-secondary/30 px-6 py-12 md:px-12 md:py-16">
+          <div className="flex flex-col items-center text-center">
+            <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+              充值汇率
+            </div>
+            <div className="mt-4 flex flex-wrap items-baseline justify-center gap-3 font-mono md:gap-5">
+              <span className="text-5xl font-semibold tracking-tight text-foreground md:text-7xl">
+                ¥{TOPUP_RATE}
+              </span>
+              <span className="text-3xl text-muted-foreground md:text-5xl">=</span>
+              <span className="text-5xl font-semibold tracking-tight text-brand md:text-7xl">
+                $1
+              </span>
+            </div>
+            <div className="mt-4 font-mono text-sm text-muted-foreground md:text-base">
+              充值 <span className="text-foreground">¥40</span> 即得 <span className="text-foreground">$100</span> 美元额度
+            </div>
+            <div className="mt-6 max-w-xl text-xs leading-relaxed text-muted-foreground md:text-sm">
+              按厂商官方价扣额度,实际成本相比直接走官方({" "}
+              <span className="font-mono">¥{USD_TO_CNY}/$1</span>
+              {" "}市场汇率)节省高达{" "}
+              <span className="font-mono font-semibold text-brand">{headlineSavings}%</span>。
             </div>
           </div>
+        </div>
 
-          {PROVIDERS.map((p) => {
-            const max = maxSavings(p.featured);
-            return (
-              <TabsContent key={p.id} value={p.id} className="mt-0">
-                <div className="border border-border bg-background">
-                  {/* Title row */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-5">
-                    <h3 className="font-mono text-2xl font-semibold tracking-tight">
-                      {p.tabLabel} 价格对比
-                    </h3>
-                    <div className="inline-flex items-center gap-2 border border-brand/30 bg-brand/10 px-3 py-1 font-mono text-xs text-brand">
-                      <span className="size-1.5 rounded-full bg-brand" />
-                      最高省 {max}%
-                    </div>
-                  </div>
+        {/* Feature cards */}
+        <div className="mb-12 grid gap-4 md:grid-cols-3 md:gap-5">
+          <FeatureCard
+            icon={<Boxes className="size-5" />}
+            title="官方原生模型"
+            desc={
+              <>
+                Claude opus 4.7 · GPT-5.5 · Gemini 3 Pro
+                <br />
+                与 thinkai 同步 20+ 主流模型
+              </>
+            }
+          />
+          <FeatureCard
+            icon={<TrendingDown className="size-5" />}
+            title={`节省 ${headlineSavings}%`}
+            desc={
+              <>
+                对比厂商官方价(按 ¥{USD_TO_CNY}/$1 折算)
+                <br />
+                Claude 系列节省 {claudeSavings}%,GPT/Gemini 节省 {headlineSavings}%
+              </>
+            }
+          />
+          <FeatureCard
+            icon={<InfinityIcon className="size-5" />}
+            title="永不过期"
+            desc={
+              <>
+                按量扣费,余额不限期使用
+                <br />
+                没有订阅锁定,没有最低消费
+              </>
+            }
+          />
+        </div>
 
-                  {/* Column header */}
-                  <div className="hidden grid-cols-[1.4fr_1fr_1fr_1fr_auto] items-center gap-4 border-b border-border bg-secondary/40 px-6 py-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground md:grid">
-                    <div>模型</div>
-                    <div>输入</div>
-                    <div>输出</div>
-                    <div>缓存读取</div>
-                    <div className="text-right">节省</div>
-                  </div>
-
-                  {/* Rows */}
-                  <div className="divide-y divide-border">
-                    {p.featured.map((row) => (
-                      <PriceRow key={row.model} row={row} />
-                    ))}
-                  </div>
-
-                  {/* Footnote */}
-                  <div className="space-y-1.5 border-t border-border px-6 py-4 text-xs text-muted-foreground">
-                    <div>
-                      显示价格为人民币(¥) — 你的真实扣费金额。充值比例固定
-                      <span className="mx-1 font-mono text-foreground">¥{TOPUP_RATE} → $1 余额</span>；
-                      Claude 类按 <span className="font-mono text-foreground">3×</span> 倍率扣 USD 余额，
-                      GPT/Gemini 按 <span className="font-mono text-foreground">1×</span> 扣。
-                    </div>
-                    <div>
-                      划线价为官方按真实汇率 <span className="font-mono text-foreground">¥{USD_TO_CNY}/$1</span> 换算的人民币成本，实际扣费以模型、分组和缓存命中情况为准。
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            );
-          })}
-        </Tabs>
-
-        <div className="mt-8 flex flex-wrap items-center gap-3">
+        {/* CTA */}
+        <div className="flex flex-col items-center gap-3 md:flex-row md:justify-center">
           <Button
             size="lg"
             nativeButton={false}
-            className="font-mono"
-            render={<Link href="/pricing">查看完整价格表</Link>}
+            className="w-full font-mono md:w-auto"
+            render={
+              <Link href="/pricing">
+                查看完整价格表
+                <ArrowRight />
+              </Link>
+            }
           />
           <Button
             size="lg"
             variant="outline"
             nativeButton={false}
-            className="font-mono"
-            render={<Link href="/docs">接入文档</Link>}
+            className="w-full font-mono md:w-auto"
+            render={<Link href="/register">立即注册 · 开始使用</Link>}
           />
+        </div>
+
+        {/* Small claude ratio footnote (用户原始需求要求标注,但不能显眼) */}
+        <div className="mt-10 text-center font-mono text-[10px] text-muted-foreground/60">
+          * Claude 系列倍率 {GROUP_RATIO.claude}×,详见{" "}
+          <Link href="/pricing" className="underline-offset-2 hover:underline hover:text-brand">
+            完整价格表
+          </Link>
         </div>
       </div>
     </section>
   );
 }
 
-function PriceRow({ row }: { row: ModelRow }) {
-  const saved = savingsPercentFor(row.provider);
-  return (
-    <div className="grid grid-cols-2 items-center gap-3 px-6 py-5 transition-colors hover:bg-secondary/30 md:grid-cols-[1.4fr_1fr_1fr_1fr_auto] md:gap-4">
-      <div className="col-span-2 md:col-span-1">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-sm font-medium text-foreground">
-            {row.display}
-          </span>
-          {row.badge ? (
-            <span className="border border-border bg-secondary px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              {row.badge}
-            </span>
-          ) : null}
-        </div>
-      </div>
-
-      <PriceCell label="输入" usd={row.price.input} provider={row.provider} />
-      <PriceCell label="输出" usd={row.price.output} provider={row.provider} />
-      <PriceCell label="缓存读取" usd={row.price.cacheRead} provider={row.provider} />
-
-      <div className="col-span-2 mt-2 md:col-span-1 md:mt-0 md:text-right">
-        {saved > 0 ? (
-          <span className="inline-flex items-center border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-mono text-xs text-emerald-700 dark:text-emerald-400">
-            省 {saved}%
-          </span>
-        ) : (
-          <span className="font-mono text-xs text-muted-foreground">—</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function PriceCell({
-  label,
-  usd,
-  provider,
+function FeatureCard({
+  icon,
+  title,
+  desc,
 }: {
-  label: string;
-  usd?: number;
-  provider: "claude" | "gpt";
+  icon: React.ReactNode;
+  title: string;
+  desc: React.ReactNode;
 }) {
-  if (usd === undefined) {
-    return (
-      <div>
-        <div className="font-mono text-xs text-muted-foreground md:hidden">{label}</div>
-        <div className="font-mono text-base font-medium text-muted-foreground">—</div>
-      </div>
-    );
-  }
   return (
-    <div>
-      <div className="font-mono text-xs text-muted-foreground md:hidden">{label}</div>
-      <div className="font-mono text-base font-medium text-brand">
-        {formatRmb(ourRmb(usd, provider))}
+    <div className="group border border-border bg-background p-6 transition-colors hover:border-brand/40 hover:bg-secondary/30">
+      <div className="mb-3 inline-flex size-10 items-center justify-center border border-border bg-secondary/50 text-brand transition-colors group-hover:border-brand/40 group-hover:bg-brand/10">
+        {icon}
       </div>
-      <div className="font-mono text-[11px] text-muted-foreground/70 line-through">
-        官方 {formatRmb(officialRmb(usd))}
-      </div>
+      <h3 className="font-mono text-lg font-semibold tracking-tight text-foreground">
+        {title}
+      </h3>
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground md:text-sm">
+        {desc}
+      </p>
     </div>
   );
 }

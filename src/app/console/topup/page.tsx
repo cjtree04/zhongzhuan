@@ -27,17 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/use-auth";
 
-const DEFAULT_QUOTA_PER_UNIT = 500000;
-const DEFAULT_USD_RATE = 1;
-
-function formatRmb(quota: number, status: SiteStatus | null): string {
-  const perUnit = status?.quota_per_unit || DEFAULT_QUOTA_PER_UNIT;
-  const rate = status?.usd_exchange_rate || DEFAULT_USD_RATE;
-  const cny = (quota / perUnit) * rate;
-  if (cny >= 100) return `¥${cny.toFixed(0)}`;
-  if (cny >= 10) return `¥${cny.toFixed(1)}`;
-  return `¥${cny.toFixed(2)}`;
-}
+import { formatRmbHint, formatUsd } from "@/lib/format-quota";
 
 function formatTime(unix: number): string {
   if (!unix) return "—";
@@ -141,7 +131,7 @@ export default function TopUpPage() {
       return;
     }
     setRedeemSuccess(
-      `兑换成功!到账 ${formatRmb(r.data || 0, status)}。页面将在 2 秒后刷新。`,
+      `兑换成功!到账 ${formatUsd(r.data || 0, status)}(${formatRmbHint(r.data || 0, status)})。页面将在 2 秒后刷新。`,
     );
     setCode("");
     setTimeout(() => window.location.reload(), 2000);
@@ -224,7 +214,10 @@ export default function TopUpPage() {
               当前余额
             </div>
             <div className="font-mono text-2xl font-semibold text-brand md:text-3xl">
-              {formatRmb(user.quota, status)}
+              {formatUsd(user.quota, status)}
+            </div>
+            <div className="font-mono text-[10px] text-muted-foreground">
+              {formatRmbHint(user.quota, status)}
             </div>
           </div>
         </div>

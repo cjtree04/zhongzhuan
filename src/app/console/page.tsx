@@ -30,25 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/use-auth";
 
-const DEFAULT_QUOTA_PER_UNIT = 500000;
-const DEFAULT_USD_RATE = 1; // 你站固定 1 USD = 1 ¥(0.46 充值比例下,扣的 USD = 显示金额)
-
-function formatRmb(quota: number, status: SiteStatus | null): string {
-  const perUnit = status?.quota_per_unit || DEFAULT_QUOTA_PER_UNIT;
-  const rate = status?.usd_exchange_rate || DEFAULT_USD_RATE;
-  const usd = quota / perUnit;
-  const cny = usd * rate;
-  if (cny >= 100) return `¥${cny.toFixed(0)}`;
-  if (cny >= 10) return `¥${cny.toFixed(1)}`;
-  return `¥${cny.toFixed(2)}`;
-}
-
-function formatRmbFull(quota: number, status: SiteStatus | null): string {
-  const perUnit = status?.quota_per_unit || DEFAULT_QUOTA_PER_UNIT;
-  const rate = status?.usd_exchange_rate || DEFAULT_USD_RATE;
-  const usd = quota / perUnit;
-  return `¥${(usd * rate).toFixed(4)}`;
-}
+import { formatRmbHint, formatUsd } from "@/lib/format-quota";
 
 function timeAgo(unix: number): string {
   if (!unix) return "—";
@@ -199,15 +181,15 @@ export default function ConsolePage() {
           <Stat
             icon={CircleDollarSign}
             label="可用余额"
-            value={formatRmb(user.quota, status)}
-            sub={formatRmbFull(user.quota, status)}
+            value={formatUsd(user.quota, status)}
+            sub={formatRmbHint(user.quota, status)}
             highlight
           />
           <Stat
             icon={ReceiptText}
             label="累计消耗"
-            value={formatRmb(user.used_quota, status)}
-            sub={`${user.request_count.toLocaleString()} 次请求`}
+            value={formatUsd(user.used_quota, status)}
+            sub={`${formatRmbHint(user.used_quota, status)} · ${user.request_count.toLocaleString()} 次请求`}
           />
           <Stat
             icon={KeyRound}
@@ -218,8 +200,8 @@ export default function ConsolePage() {
           <Stat
             icon={Activity}
             label="邀请奖励"
-            value={formatRmb(user.aff_history_quota || 0, status)}
-            sub={`${user.aff_count || 0} 人已注册`}
+            value={formatUsd(user.aff_history_quota || 0, status)}
+            sub={`${formatRmbHint(user.aff_history_quota || 0, status)} · ${user.aff_count || 0} 人已注册`}
           />
         </div>
 
@@ -435,10 +417,13 @@ function TokenRowDisplay({
       {!token.unlimited_quota ? (
         <div className="text-right">
           <div className="font-mono text-sm font-medium text-foreground">
-            {formatRmb(token.remain_quota, status)}
+            {formatUsd(token.remain_quota, status)}
           </div>
           <div className="font-mono text-[10px] text-muted-foreground">
-            余额 / 已用 {formatRmb(token.used_quota, status)}
+            {formatRmbHint(token.remain_quota, status)}
+          </div>
+          <div className="font-mono text-[10px] text-muted-foreground/70">
+            已用 {formatUsd(token.used_quota, status)}
           </div>
         </div>
       ) : null}
@@ -540,7 +525,7 @@ function UsagePanel({
           <>
             <Sparkline buckets={buckets} />
             <div className="mt-4 grid grid-cols-2 gap-px border border-border bg-border md:max-w-md">
-              <MiniStat label="本周消费" value={formatRmb(totalQuota, status)} accent />
+              <MiniStat label="本周消费" value={formatUsd(totalQuota, status)} sub={formatRmbHint(totalQuota, status)} accent />
               <MiniStat label="本周请求" value={totalRequests.toLocaleString()} />
             </div>
           </>
@@ -572,7 +557,7 @@ function UsagePanel({
                   <div className="flex items-center justify-between gap-2 font-mono text-xs">
                     <span className="truncate text-foreground">{m.model}</span>
                     <span className="text-muted-foreground">
-                      {formatRmb(m.quota, status)}
+                      {formatUsd(m.quota, status)}
                     </span>
                   </div>
                   <div className="h-1 w-full bg-secondary/60">
@@ -594,10 +579,12 @@ function UsagePanel({
 function MiniStat({
   label,
   value,
+  sub,
   accent,
 }: {
   label: string;
   value: string;
+  sub?: string;
   accent?: boolean;
 }) {
   return (
@@ -613,6 +600,11 @@ function MiniStat({
       >
         {value}
       </div>
+      {sub ? (
+        <div className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+          {sub}
+        </div>
+      ) : null}
     </div>
   );
 }

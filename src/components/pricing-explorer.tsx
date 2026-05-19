@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
+  GROUP_RATIO,
   PROVIDERS,
   formatRmb,
   maxSavings,
@@ -76,7 +77,7 @@ export function PricingExplorer() {
                   {max > 0 ? (
                     <div className="inline-flex items-center gap-2 border border-brand/30 bg-brand/10 px-3 py-1 font-mono text-xs text-brand">
                       <span className="size-1.5 rounded-full bg-brand" />
-                      最高省 {max}%
+                      最低 {100 - max}% 官方价
                     </div>
                   ) : null}
                 </div>
@@ -121,6 +122,14 @@ function FullRow({ row }: { row: ModelRow }) {
           <span className="font-mono text-sm font-medium text-foreground">
             {row.display}
           </span>
+          {row.provider === "claude" ? (
+            <span
+              className="border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-amber-700 dark:text-amber-400"
+              title="Claude 系列倍率 3×:消耗 $1 标价时扣 $3 美元余额"
+            >
+              ×{GROUP_RATIO.claude}
+            </span>
+          ) : null}
           {row.badge ? (
             <span
               className={cn(
@@ -144,12 +153,12 @@ function FullRow({ row }: { row: ModelRow }) {
       <Cell label="输入" usd={row.price.input} provider={row.provider} />
       <Cell label="输出" usd={row.price.output} provider={row.provider} />
       <Cell label="缓存读取" usd={row.price.cacheRead} provider={row.provider} />
-      <Cell label="缓存写入" usd={row.price.cacheWrite5m} provider={row.provider} />
+      <Cell label="缓存写入" usd={row.price.cacheWrite} provider={row.provider} />
 
       <div className="col-span-2 mt-2 md:col-span-1 md:mt-0 md:text-right">
         {saved > 0 ? (
           <span className="inline-flex items-center border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-mono text-xs text-emerald-700 dark:text-emerald-400">
-            省 {saved}%
+            {saved}%
           </span>
         ) : (
           <span className="font-mono text-xs text-muted-foreground">—</span>

@@ -29,17 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/use-auth";
 
-const DEFAULT_QUOTA_PER_UNIT = 500000;
-const DEFAULT_USD_RATE = 1;
-
-function formatRmb(quota: number, status: SiteStatus | null): string {
-  const perUnit = status?.quota_per_unit || DEFAULT_QUOTA_PER_UNIT;
-  const rate = status?.usd_exchange_rate || DEFAULT_USD_RATE;
-  const cny = (quota / perUnit) * rate;
-  if (cny >= 100) return `¥${cny.toFixed(0)}`;
-  if (cny >= 10) return `¥${cny.toFixed(1)}`;
-  return `¥${cny.toFixed(2)}`;
-}
+import { formatRmbHint, formatUsd } from "@/lib/format-quota";
 
 export default function PersonalPage() {
   const { user, loading: authLoading } = useAuth();
@@ -767,8 +757,17 @@ function AffiliateSection({
           </div>
           <div className="grid grid-cols-2 gap-px border border-border bg-border">
             <Box label="已邀请用户" value={String(user.aff_count || 0)} />
-            <Box label="累计奖励" value={formatRmb(user.aff_history_quota || 0, status)} />
-            <Box label="可转入余额" value={formatRmb(user.aff_quota || 0, status)} accent />
+            <Box
+              label="累计奖励"
+              value={formatUsd(user.aff_history_quota || 0, status)}
+              sub={formatRmbHint(user.aff_history_quota || 0, status)}
+            />
+            <Box
+              label="可转入余额"
+              value={formatUsd(user.aff_quota || 0, status)}
+              sub={formatRmbHint(user.aff_quota || 0, status)}
+              accent
+            />
             <Box label="状态" value="—" />
           </div>
         </div>
@@ -811,10 +810,12 @@ function AffiliateSection({
 function Box({
   label,
   value,
+  sub,
   accent,
 }: {
   label: string;
   value: string;
+  sub?: string;
   accent?: boolean;
 }) {
   return (
@@ -830,6 +831,11 @@ function Box({
       >
         {value}
       </div>
+      {sub ? (
+        <div className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+          {sub}
+        </div>
+      ) : null}
     </div>
   );
 }

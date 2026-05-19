@@ -191,14 +191,15 @@ function RegisterInner() {
             <Input
               id="r_code"
               type="text"
-              inputMode="numeric"
               maxLength={6}
               autoComplete="one-time-code"
               value={verificationCode}
-              onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
-              className="font-mono"
+              onChange={(e) =>
+                setVerificationCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))
+              }
+              className="font-mono tracking-[0.2em]"
               disabled={loading}
-              placeholder="6 位数字"
+              placeholder="6 位字符 (字母+数字)"
             />
           </div>
         ) : null}

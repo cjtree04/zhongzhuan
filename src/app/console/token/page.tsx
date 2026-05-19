@@ -44,22 +44,12 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/use-auth";
 
-const DEFAULT_QUOTA_PER_UNIT = 500000;
-const DEFAULT_USD_RATE = 1;
+import { DEFAULT_QUOTA_PER_UNIT, formatRmbHint, formatUsd } from "@/lib/format-quota";
 
-function quotaToRmb(quota: number, status: SiteStatus | null): string {
+/** USD 数字 → quota int(创建/编辑 token 时输入额度用) */
+function usdToQuota(usd: number, status: SiteStatus | null): number {
   const perUnit = status?.quota_per_unit || DEFAULT_QUOTA_PER_UNIT;
-  const rate = status?.usd_exchange_rate || DEFAULT_USD_RATE;
-  const cny = (quota / perUnit) * rate;
-  if (cny >= 100) return `¥${cny.toFixed(0)}`;
-  if (cny >= 10) return `¥${cny.toFixed(1)}`;
-  return `¥${cny.toFixed(2)}`;
-}
-
-function rmbToQuota(rmb: number, status: SiteStatus | null): number {
-  const perUnit = status?.quota_per_unit || DEFAULT_QUOTA_PER_UNIT;
-  const rate = status?.usd_exchange_rate || DEFAULT_USD_RATE;
-  return Math.round((rmb / rate) * perUnit);
+  return Math.round(usd * perUnit);
 }
 
 function formatTime(unix: number): string {
@@ -378,10 +368,15 @@ function TokenItem({
           余额
         </div>
         <div className="font-mono text-sm font-medium text-foreground">
-          {token.unlimited_quota ? "—" : quotaToRmb(token.remain_quota, status)}
+          {token.unlimited_quota ? "—" : formatUsd(token.remain_quota, status)}
         </div>
-        <div className="font-mono text-[10px] text-muted-foreground">
-          已用 {quotaToRmb(token.used_quota, status)}
+        {!token.unlimited_quota ? (
+          <div className="font-mono text-[10px] text-muted-foreground">
+            {formatRmbHint(token.remain_quota, status)}
+          </div>
+        ) : null}
+        <div className="font-mono text-[10px] text-muted-foreground/70">
+          已用 {formatUsd(token.used_quota, status)}
         </div>
       </div>
 
@@ -471,7 +466,7 @@ function TokenFormDialog({
   const isEdit = !!editing;
   const [name, setName] = useState("");
   const [unlimited, setUnlimited] = useState(false);
-  const [rmbQuota, setRmbQuota] = useState<number>(10);
+  const [usdQuota, setUsdQuota] = useState<number>(10);
   const [expiryDays, setExpiryDays] = useState<number>(-1);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -481,13 +476,11 @@ function TokenFormDialog({
     if (editing) {
       setName(editing.name);
       setUnlimited(editing.unlimited_quota);
-      setRmbQuota(
+      setUsdQuota(
         editing.unlimited_quota
           ? 10
           : Math.round(
-              ((editing.remain_quota / (status?.quota_per_unit || DEFAULT_QUOTA_PER_UNIT)) *
-                (status?.usd_exchange_rate || DEFAULT_USD_RATE)) *
-                100,
+              (editing.remain_quota / (status?.quota_per_unit || DEFAULT_QUOTA_PER_UNIT)) * 100,
             ) / 100,
       );
       // expiry days — compute from expired_time
@@ -501,7 +494,7 @@ function TokenFormDialog({
     } else {
       setName("");
       setUnlimited(false);
-      setRmbQuota(10);
+      setUsdQuota(10);
       setExpiryDays(-1);
     }
     setError("");
@@ -514,7 +507,7 @@ function TokenFormDialog({
       return;
     }
     setSaving(true);
-    const remainQuota = unlimited ? 0 : rmbToQuota(rmbQuota, status);
+    const remainQuota = unlimited ? 0 : usdToQuota(usdQuota, status);
     const expiredTime =
       expiryDays < 0
         ? -1
@@ -596,18 +589,23 @@ function TokenFormDialog({
             </div>
             {!unlimited ? (
               <div className="mt-2 space-y-1.5">
-                <Input
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={rmbQuota || ""}
-                  onChange={(e) => setRmbQuota(Math.max(0, Number(e.target.value)))}
-                  placeholder="10"
-                  className="font-mono"
-                  disabled={saving}
-                />
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono text-sm text-muted-foreground">
+                    $
+                  </span>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={usdQuota || ""}
+                    onChange={(e) => setUsdQuota(Math.max(0, Number(e.target.value)))}
+                    placeholder="10"
+                    className="pl-7 font-mono"
+                    disabled={saving}
+                  />
+                </div>
                 <div className="font-mono text-[10px] text-muted-foreground">
-                  ¥{rmbQuota} = {rmbToQuota(rmbQuota, status).toLocaleString()} 配额
+                  {formatRmbHint(usdToQuota(usdQuota, status), status)} · {usdToQuota(usdQuota, status).toLocaleString()} 配额
                 </div>
               </div>
             ) : null}
