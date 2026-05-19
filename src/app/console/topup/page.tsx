@@ -82,9 +82,16 @@ export default function TopUpPage() {
     api.topupInfo().then((r) => {
       if (r.success && r.data) {
         setInfo(r.data);
-        // 默认选第一个支付方式
-        if (r.data.pay_methods?.length && !selectedMethod) {
-          setSelectedMethod(r.data.pay_methods[0].type);
+        // 默认选第一个支付方式(过滤 wxpay/微信和自定义,与下方按钮渲染保持一致)
+        const visible = r.data.pay_methods?.filter(
+          (m) =>
+            !m.name.includes("自定义") &&
+            !/^custom/i.test(m.type) &&
+            !m.name.includes("微信") &&
+            !/^wx|wechat/i.test(m.type),
+        );
+        if (visible?.length && !selectedMethod) {
+          setSelectedMethod(visible[0].type);
         }
       }
     });
@@ -403,7 +410,9 @@ export default function TopUpPage() {
                         .filter(
                           (m) =>
                             !m.name.includes("自定义") &&
-                            !/^custom/i.test(m.type),
+                            !/^custom/i.test(m.type) &&
+                            !m.name.includes("微信") &&
+                            !/^wx|wechat/i.test(m.type),
                         )
                         .map((m) => (
                           <button
