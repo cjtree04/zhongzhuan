@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  AlertTriangle,
   ArrowLeft,
   Bell,
   Check,
@@ -23,7 +22,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   api,
-  clearAuthState,
   type SelfUser,
   type SiteStatus,
   type TwoFAStatus,
@@ -88,7 +86,6 @@ export default function PersonalPage() {
           <SecuritySection />
           <NotificationSection />
           <AffiliateSection user={user} status={status} />
-          <DangerZone />
         </div>
       </div>
     </section>
@@ -1026,61 +1023,3 @@ function Box({
   );
 }
 
-// ─────────────────────────────────────────────────────────
-// 危险区
-// ─────────────────────────────────────────────────────────
-function DangerZone() {
-  const [confirmInput, setConfirmInput] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  async function destroy() {
-    if (confirmInput !== "DELETE") {
-      setError("请输入 DELETE 以确认操作");
-      return;
-    }
-    setError("");
-    setBusy(true);
-    const r = await api.deleteSelf();
-    setBusy(false);
-    if (!r.success) {
-      setError(r.message || "操作失败");
-      return;
-    }
-    clearAuthState();
-    window.location.replace("/");
-  }
-
-  return (
-    <Section
-      icon={AlertTriangle}
-      eyebrow="DANGER · 05"
-      title="注销账户"
-      desc="软删除当前账户,所有 token 立刻失效。操作不可在前端撤销。"
-    >
-      <div className="space-y-3">
-        <div className="font-mono text-[11px] text-muted-foreground">
-          为防止误触,请在下方输入 <code className="text-foreground">DELETE</code> 后点击注销。
-        </div>
-        <div className="flex flex-col gap-3 md:flex-row">
-          <Input
-            value={confirmInput}
-            onChange={(e) => setConfirmInput(e.target.value)}
-            placeholder="DELETE"
-            className="font-mono md:max-w-xs"
-          />
-          <Button
-            type="button"
-            variant="destructive"
-            className="font-mono"
-            onClick={destroy}
-            disabled={busy || confirmInput !== "DELETE"}
-          >
-            {busy ? "处理中…" : "确认注销"}
-          </Button>
-        </div>
-        <FormError message={error} />
-      </div>
-    </Section>
-  );
-}

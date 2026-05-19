@@ -26,7 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/use-auth";
 
-import { formatRmbHint, formatUsd } from "@/lib/format-quota";
+import { formatRmbHint, formatUsd, formatUsdPrecise } from "@/lib/format-quota";
 
 function formatTime(unix: number): string {
   if (!unix) return "—";
@@ -440,7 +440,7 @@ function LogRowDisplay({
       {/* 消耗 */}
       <div className="col-span-1 lg:col-span-1">
         <div className="font-mono text-sm font-semibold text-brand">
-          {log.quota > 0 ? formatUsd(log.quota, status) : "—"}
+          {log.quota > 0 ? formatUsdPrecise(log.quota, status) : "—"}
         </div>
       </div>
 

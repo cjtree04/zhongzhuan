@@ -18,8 +18,13 @@ export function quotaToUsd(quota: number, status: SiteStatus | null): number {
   return quota / perUnit;
 }
 
-/** quota → "$X.XX" 美元字符串(主显示) */
+/** quota → "$X.XX" 美元字符串(主显示,固定 2 位小数;用于控制台余额/消耗/奖励等汇总值) */
 export function formatUsd(quota: number, status: SiteStatus | null): string {
+  return `$${quotaToUsd(quota, status).toFixed(2)}`;
+}
+
+/** quota → "$X.XXXX" 美元字符串(高精度,用于单条日志/明细等小数额场景) */
+export function formatUsdPrecise(quota: number, status: SiteStatus | null): string {
   const usd = quotaToUsd(quota, status);
   if (usd >= 100) return `$${usd.toFixed(2)}`;
   if (usd >= 1) return `$${usd.toFixed(3)}`;
