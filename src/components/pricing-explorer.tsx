@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
-  ALL_MODELS,
   GROUP_RATIO,
   PROVIDERS,
   formatRmb,
@@ -19,52 +18,35 @@ import {
   type Provider,
 } from "@/lib/pricing";
 
-/** 把 badge="旗舰" / "性价比" 的模型聚合成虚拟 tab */
-const FLAGSHIP = ALL_MODELS.filter((m) => m.badge === "旗舰");
-const VALUE = ALL_MODELS.filter((m) => m.badge === "性价比");
+/** badge 排序权重:旗舰 → 0(最前)、性价比 → 1、其他 → 2 */
+const badgeWeight = (b?: string) =>
+  b === "旗舰" ? 0 : b === "性价比" ? 1 : 2;
 
-type TabDef = {
-  id: string;
-  tabLabel: string;
-  name: string;
-  description: string;
-  full: ModelRow[];
-};
-
-const ALL_TABS: TabDef[] = [
-  {
-    id: "flagship",
-    tabLabel: "旗舰",
-    name: "旗舰模型",
-    description: "各厂商最强模型,适合复杂推理、代码、创意写作。",
-    full: FLAGSHIP,
-  },
-  {
-    id: "value",
-    tabLabel: "性价比",
-    name: "性价比之选",
-    description: "便宜量大,适合日常对话、批量处理、轻量推理。",
-    full: VALUE,
-  },
-  ...PROVIDERS.map((p) => ({
-    id: p.id,
-    tabLabel: p.tabLabel,
-    name: p.name,
-    description: p.description,
-    full: p.full,
-  })),
-];
+/** 厂商列表内排序:旗舰第一行,性价比第二行,其他保留原序 */
+function sortByBadge(rows: ModelRow[]): ModelRow[] {
+  return [...rows]
+    .map((r, idx) => ({ r, idx }))
+    .sort((a, b) => {
+      const wa = badgeWeight(a.r.badge);
+      const wb = badgeWeight(b.r.badge);
+      if (wa !== wb) return wa - wb;
+      return a.idx - b.idx;
+    })
+    .map((x) => x.r);
+}
 
 export function PricingExplorer() {
   const [q, setQ] = useState("");
 
   const filtered = useMemo(
     () =>
-      ALL_TABS.map((p) => ({
+      PROVIDERS.map((p) => ({
         ...p,
-        rows: p.full.filter((r) =>
-          [r.model, r.display].some((s) =>
-            s.toLowerCase().includes(q.toLowerCase()),
+        rows: sortByBadge(
+          p.full.filter((r) =>
+            [r.model, r.display].some((s) =>
+              s.toLowerCase().includes(q.toLowerCase()),
+            ),
           ),
         ),
       })),
@@ -89,7 +71,7 @@ export function PricingExplorer() {
         </div>
       </div>
 
-      <Tabs defaultValue="flagship" className="gap-0">
+      <Tabs defaultValue="claude" className="gap-0">
         <TabsList variant="line" className="mb-6 gap-1 bg-transparent">
           {filtered.map((p) => (
             <TabsTrigger key={p.id} value={p.id} className="font-mono px-3">

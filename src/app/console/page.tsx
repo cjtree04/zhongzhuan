@@ -12,11 +12,14 @@ import {
   KeyRound,
   LineChart,
   ListChecks,
+  Megaphone,
   Plus,
   ReceiptText,
   Settings,
+  Sparkles,
   TrendingUp,
   Wallet,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +43,9 @@ function timeAgo(unix: number): string {
   return d.toLocaleDateString("zh-CN");
 }
 
+/** 迎新公告版本号 — 改这个数字会让所有用户重新看到公告(忽略之前的关闭记录) */
+const LAUNCH_NOTICE_VERSION = "v1-launch-2026-05";
+
 export default function ConsolePage() {
   const { user, loading: authLoading } = useAuth();
   const [status, setStatus] = useState<SiteStatus | null>(null);
@@ -47,6 +53,22 @@ export default function ConsolePage() {
   const [tokenTotal, setTokenTotal] = useState(0);
   const [tokensLoading, setTokensLoading] = useState(true);
   const [usageLogs, setUsageLogs] = useState<LogRow[] | null>(null);
+  const [noticeOpen, setNoticeOpen] = useState(false);
+
+  // 检查 localStorage 看用户有没有关过这个版本的公告
+  useEffect(() => {
+    const dismissed = localStorage.getItem("zz_notice_dismissed");
+    if (dismissed !== LAUNCH_NOTICE_VERSION) setNoticeOpen(true);
+  }, []);
+
+  function dismissNotice() {
+    localStorage.setItem("zz_notice_dismissed", LAUNCH_NOTICE_VERSION);
+    setNoticeOpen(false);
+  }
+
+  function copyWechat() {
+    navigator.clipboard.writeText("Mou_zaisi");
+  }
 
   useEffect(() => {
     // 公开，即使未登录也能拉
@@ -103,6 +125,56 @@ export default function ConsolePage() {
   return (
     <section className="border-b border-border">
       <div className="mx-auto max-w-7xl px-6 py-12 md:py-16">
+        {/* 迎新公告 banner */}
+        {noticeOpen ? (
+          <div className="relative mb-8 border border-brand/40 bg-gradient-to-br from-brand/10 via-brand/5 to-transparent p-5 md:p-6">
+            <button
+              type="button"
+              onClick={dismissNotice}
+              aria-label="关闭公告"
+              className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-4" />
+            </button>
+
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
+              <div className="flex items-center gap-3 md:flex-col md:items-center md:gap-2">
+                <div className="inline-flex size-10 items-center justify-center rounded-full border border-brand/40 bg-brand/10 text-brand">
+                  <Megaphone className="size-5" />
+                </div>
+                <span className="inline-flex items-center gap-1 border border-brand/30 bg-brand/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-brand">
+                  <Sparkles className="size-3" />
+                  上线福利
+                </span>
+              </div>
+
+              <div className="flex-1">
+                <h2 className="font-mono text-lg font-semibold text-foreground md:text-xl">
+                  zhongzhuantoken.com 正式上线 🎉
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  庆祝期间，加客服微信{" "}
+                  <button
+                    type="button"
+                    onClick={copyWechat}
+                    title="点击复制"
+                    className="mx-0.5 inline-flex items-center gap-1 border border-brand/40 bg-background px-1.5 py-0.5 font-mono text-xs text-foreground hover:border-brand"
+                  >
+                    Mou_zaisi
+                    <Copy className="size-3 text-muted-foreground" />
+                  </button>
+                  {" "}(备注「上线福利」)，免费领取{" "}
+                  <span className="font-semibold text-brand">$20 美元额度</span>
+                  ，先到先得。
+                </p>
+                <div className="mt-3 font-mono text-[11px] text-muted-foreground/80">
+                  · 按厂商官方价扣费 · ¥0.42 = $1 美元额度 · Claude / GPT-5 / Gemini 全系 20+ 模型
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         {/* Header */}
         <div className="mb-10 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
