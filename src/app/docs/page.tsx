@@ -1,5 +1,6 @@
 import { CodeBlock } from "@/components/code-block";
 import { DocsSidebar } from "@/components/docs-sidebar";
+import { GROUP_RATIO, TOPUP_RATE } from "@/lib/pricing";
 
 export const metadata = {
   title: "接入文档 — Zhongzhuan Token",
@@ -57,9 +58,9 @@ export default function DocsPage() {
               定价非常简单:
             </p>
             <div className="border border-brand/30 bg-brand/5 p-4 font-mono text-sm">
-              <div>充值汇率 <span className="font-bold text-brand">¥0.42 = $1</span> 美元额度</div>
+              <div>充值汇率 <span className="font-bold text-brand">¥{TOPUP_RATE} = $1</span> 美元额度</div>
               <div className="mt-1 text-muted-foreground text-xs">
-                即:充 ¥42 = $100 美元额度。最低充值 $10($10 ≈ ¥4.2)。
+                即:充 ¥{(TOPUP_RATE * 100).toFixed(0)} = $100 美元额度。最低充值 $10($10 ≈ ¥{(TOPUP_RATE * 10).toFixed(2)})。
               </div>
             </div>
             <p>
@@ -113,8 +114,8 @@ export default function DocsPage() {
             <h3 className="mt-8 font-mono text-base font-semibold text-foreground">常见问题</h3>
             <div className="space-y-3 mt-3">
               <Faq q="Claude 系列模型为什么扣费看起来比标价多?">
-                Claude 系列(opus / sonnet / haiku)是 3× 倍率:消耗 $1 标价 = 实扣 $3 美元额度 = ¥1.26。
-                这是因为 Claude 上游号池采购成本更高。GPT / Gemini 全系都是 1× 倍率,即标价等于扣费。
+                Claude 系列(opus / sonnet / haiku)是 {GROUP_RATIO.claude}× 倍率:消耗 $1 标价 = 实扣 ${GROUP_RATIO.claude} 美元额度 = ¥{(GROUP_RATIO.claude * TOPUP_RATE).toFixed(2)}。
+                这是因为 Claude 上游号池采购成本更高。GPT / Gemini 全系都是 {GROUP_RATIO.gpt}× 倍率,即标价等于扣费。
                 详见 <a href="/pricing" className="text-brand underline-offset-2 hover:underline">价格表</a>。
               </Faq>
               <Faq q="账户余额能提现吗?">
