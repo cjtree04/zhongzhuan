@@ -10,8 +10,11 @@ import {
   Copy,
   Gift,
   Loader2,
+  Lock,
+  Mail,
   ShieldCheck,
   UserCircle,
+  X,
 } from "lucide-react";
 
 import { FormError, FormSuccess } from "@/components/auth-card";
@@ -138,7 +141,24 @@ function ProfileSection({ user }: { user: SelfUser }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  async function save(e: React.FormEvent) {
+  // 邮箱换绑流程
+  const [emailEditing, setEmailEditing] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [verifyCode, setVerifyCode] = useState("");
+  const [codeSending, setCodeSending] = useState(false);
+  const [codeCooldown, setCodeCooldown] = useState(0);
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [emailSuccess, setEmailSuccess] = useState("");
+
+  // 验证码倒计时
+  useEffect(() => {
+    if (codeCooldown <= 0) return;
+    const t = setTimeout(() => setCodeCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [codeCooldown]);
+
+  async function saveDisplayName(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -153,7 +173,58 @@ function ProfileSection({ user }: { user: SelfUser }) {
       setError(r.message || "保存失败");
       return;
     }
-    setSuccess("已保存");
+    setSuccess("昵称已保存");
+  }
+
+  async function sendCode() {
+    setEmailError("");
+    setEmailSuccess("");
+    const email = newEmail.trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      setEmailError("请填写有效的邮箱");
+      return;
+    }
+    if (email === (user.email || "").toLowerCase()) {
+      setEmailError("新邮箱与当前邮箱相同");
+      return;
+    }
+    setCodeSending(true);
+    const r = await api.sendEmailVerification(email);
+    setCodeSending(false);
+    if (!r.success) {
+      setEmailError(r.message || "发送失败,请稍后重试");
+      return;
+    }
+    setEmailSuccess(`验证码已发送到 ${email},5 分钟内有效`);
+    setCodeCooldown(60);
+  }
+
+  async function confirmChangeEmail(e: React.FormEvent) {
+    e.preventDefault();
+    setEmailError("");
+    setEmailSuccess("");
+    const email = newEmail.trim().toLowerCase();
+    if (!email || !verifyCode.trim()) {
+      setEmailError("邮箱和验证码都不能为空");
+      return;
+    }
+    setEmailSaving(true);
+    const r = await api.bindEmail({ email, code: verifyCode.trim() });
+    setEmailSaving(false);
+    if (!r.success) {
+      setEmailError(r.message || "换绑失败,验证码可能错误或已过期");
+      return;
+    }
+    setEmailSuccess("邮箱已更换,2 秒后刷新…");
+    setTimeout(() => window.location.reload(), 2000);
+  }
+
+  function cancelEmailEdit() {
+    setEmailEditing(false);
+    setNewEmail("");
+    setVerifyCode("");
+    setEmailError("");
+    setEmailSuccess("");
   }
 
   return (
@@ -161,24 +232,29 @@ function ProfileSection({ user }: { user: SelfUser }) {
       icon={UserCircle}
       eyebrow="PROFILE · 01"
       title="账户资料"
-      desc="账户名一旦创建无法修改;昵称会显示在控制台和邀请页。"
+      desc="用户名注册后不可修改;昵称显示在控制台;邮箱可凭验证码更换。"
     >
-      <form onSubmit={save} className="space-y-4">
+      <form onSubmit={saveDisplayName} className="space-y-4">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {/* 用户名 — 锁定 */}
           <div className="space-y-2">
-            <Label className="font-mono text-[11px] uppercase tracking-wider">
+            <Label className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider">
               用户名
+              <Lock className="size-3 text-muted-foreground/60" />
             </Label>
             <Input
               value={user.username}
               disabled
-              className="font-mono text-muted-foreground"
+              title="用户名注册后不可修改"
+              className="cursor-not-allowed font-mono"
             />
           </div>
+
+          {/* 昵称 — 可编辑 */}
           <div className="space-y-2">
             <Label
               htmlFor="display_name"
-              className="font-mono text-[11px] uppercase tracking-wider"
+              className="font-mono text-[11px] uppercase tracking-wider text-foreground"
             >
               昵称
             </Label>
@@ -189,29 +265,43 @@ function ProfileSection({ user }: { user: SelfUser }) {
               maxLength={32}
               className="font-mono"
               disabled={saving}
+              placeholder="给自己取个名字"
             />
           </div>
+
+          {/* 用户组 — 锁定 */}
           <div className="space-y-2">
-            <Label className="font-mono text-[11px] uppercase tracking-wider">
-              邮箱
-            </Label>
-            <Input
-              value={user.email || "未绑定"}
-              disabled
-              className="font-mono text-muted-foreground"
-            />
-            <div className="font-mono text-[10px] text-muted-foreground/70">
-              更换邮箱需邮箱验证码,接口已就绪,后续上线统一入口。
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label className="font-mono text-[11px] uppercase tracking-wider">
+            <Label className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider">
               用户组
+              <Lock className="size-3 text-muted-foreground/60" />
             </Label>
             <Input
               value={user.group}
               disabled
-              className="font-mono text-muted-foreground"
+              className="cursor-not-allowed font-mono"
+            />
+          </div>
+
+          {/* 邮箱 — 可换绑 */}
+          <div className="space-y-2 md:col-span-1">
+            <div className="flex items-center justify-between">
+              <Label className="font-mono text-[11px] uppercase tracking-wider text-foreground">
+                邮箱
+              </Label>
+              {!emailEditing ? (
+                <button
+                  type="button"
+                  onClick={() => setEmailEditing(true)}
+                  className="font-mono text-[11px] text-brand hover:underline"
+                >
+                  更换邮箱 →
+                </button>
+              ) : null}
+            </div>
+            <Input
+              value={user.email || "未绑定"}
+              disabled
+              className="cursor-not-allowed font-mono"
             />
           </div>
         </div>
@@ -220,11 +310,107 @@ function ProfileSection({ user }: { user: SelfUser }) {
         <FormSuccess message={success} />
 
         <div className="flex justify-end">
-          <Button type="submit" className="font-mono" disabled={saving}>
+          <Button type="submit" className="font-mono" disabled={saving || displayName === user.display_name}>
             {saving ? "保存中…" : "保存昵称"}
           </Button>
         </div>
       </form>
+
+      {/* 邮箱换绑面板 */}
+      {emailEditing ? (
+        <div className="mt-4 border border-brand/30 bg-brand/5 p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Mail className="size-4 text-brand" />
+              <div className="font-mono text-sm font-semibold text-foreground">
+                更换绑定邮箱
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={cancelEmailEdit}
+              className="text-muted-foreground hover:text-foreground"
+              title="取消"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+
+          <form onSubmit={confirmChangeEmail} className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="new_email" className="font-mono text-[11px] uppercase tracking-wider">
+                新邮箱
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id="new_email"
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="new-email@example.com"
+                  className="flex-1 font-mono"
+                  disabled={emailSaving}
+                  autoComplete="email"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={sendCode}
+                  disabled={codeSending || codeCooldown > 0 || !newEmail.trim()}
+                  className="font-mono"
+                >
+                  {codeSending
+                    ? "发送中…"
+                    : codeCooldown > 0
+                      ? `${codeCooldown}s`
+                      : "发送验证码"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="verify_code" className="font-mono text-[11px] uppercase tracking-wider">
+                验证码
+              </Label>
+              <Input
+                id="verify_code"
+                type="text"
+                value={verifyCode}
+                onChange={(e) =>
+                  setVerifyCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))
+                }
+                maxLength={6}
+                placeholder="收到邮件后填入 6 位字符"
+                className="font-mono tracking-[0.2em]"
+                disabled={emailSaving}
+                autoComplete="one-time-code"
+              />
+            </div>
+
+            <FormError message={emailError} />
+            <FormSuccess message={emailSuccess} />
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={cancelEmailEdit}
+                disabled={emailSaving}
+                className="font-mono"
+              >
+                取消
+              </Button>
+              <Button
+                type="submit"
+                disabled={emailSaving || !newEmail.trim() || !verifyCode.trim()}
+                className="font-mono"
+              >
+                {emailSaving ? "更换中…" : "确认更换"}
+              </Button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </Section>
   );
 }
