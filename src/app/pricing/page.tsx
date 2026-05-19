@@ -4,7 +4,7 @@ import { GROUP_RATIO, TOPUP_RATE, USD_TO_CNY } from "@/lib/pricing";
 export const metadata = {
   title: "价格 — Zhongzhuan Token",
   description:
-    "Claude · GPT-5 · Gemini 全系完整价格。¥0.42 = $1 美元额度，按官方价扣费,Claude 倍率 3×。",
+    "Claude · GPT-5 · Gemini 全系完整价格。¥0.42 = $1 美元额度，按官方价扣费，Claude 倍率 3×。",
 };
 
 export default function PricingPage() {

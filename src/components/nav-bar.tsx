@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Bell, Check, Languages, LayoutDashboard, LogOut, Monitor, Moon, ShieldCheck, Sun, UserCircle } from "lucide-react"
+import { Bell, Check, Copy, Languages, LayoutDashboard, LogOut, Monitor, Moon, ShieldCheck, Sun, UserCircle, Wallet } from "lucide-react"
 import { useTheme } from "next-themes"
 import { toast } from "sonner"
 
@@ -217,6 +217,14 @@ export function NavBar() {
                   />
                   <DropdownMenuItem
                     render={
+                      <Link href="/console/topup" target="_top">
+                        <Wallet className="mr-2 size-3.5" />
+                        充值
+                      </Link>
+                    }
+                  />
+                  <DropdownMenuItem
+                    render={
                       <Link href="/console/personal">
                         <UserCircle className="mr-2 size-3.5" />
                         个人设置
@@ -237,6 +245,32 @@ export function NavBar() {
                     <LogOut className="mr-2 size-3.5" />
                     退出登录
                   </DropdownMenuItem>
+
+                  {/* 客服微信 + $20 提示 */}
+                  <div className="mt-1 border-t border-border bg-brand/5 px-3 py-2.5">
+                    <div className="font-mono text-[10px] uppercase tracking-wider text-brand">
+                      新用户福利
+                    </div>
+                    <div className="mt-1 font-mono text-[11px] leading-relaxed text-foreground">
+                      加客服微信领{" "}
+                      <span className="font-semibold text-brand">$20 额度</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        navigator.clipboard.writeText("Mou_zaisi").then(() => {
+                          toast.success("微信号已复制:Mou_zaisi")
+                        })
+                      }}
+                      className="mt-1.5 flex w-full items-center justify-between gap-2 border border-border bg-background px-2 py-1 font-mono text-[11px] hover:border-brand/50"
+                    >
+                      <span>
+                        微信: <span className="font-semibold text-foreground">Mou_zaisi</span>
+                      </span>
+                      <Copy className="size-3 text-muted-foreground" />
+                    </button>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             </>

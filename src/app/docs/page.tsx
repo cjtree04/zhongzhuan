@@ -272,9 +272,6 @@ export OPENAI_BASE_URL="${BASE}/v1"
 export OPENAI_API_KEY="YOUR_KEY"
 openclaw --provider openai --model gpt-5.5`}
             />
-            <Placeholder>
-              本站自有一键脚本仍在开发中，上线后会在本节附配置链接。
-            </Placeholder>
           </Section>
 
           {/* ───────────── Hermes ───────────── */}
@@ -302,9 +299,6 @@ EOF`}
               code={`hermes
 # 启动后即可对话`}
             />
-            <Placeholder>
-              本站自有一键脚本仍在开发中，上线后会在本节附配置链接。
-            </Placeholder>
           </Section>
 
           {/* ───────────── SDK 直调 ───────────── */}

@@ -1,5 +1,12 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Zhongzhuan Token — Claude / GPT-5 / Gemini 中转 API",
+  description:
+    "国内直连 Claude 全系 / GPT-5 全系 / Gemini 全系 20+ 模型。¥0.42 = $1 美元额度，按官方价扣费，按量付费余额永不过期。新用户加客服微信领 $20。",
+};
 
 import { Button } from "@/components/ui/button";
 import {
@@ -70,7 +77,7 @@ export default function HomePage() {
                 nativeButton={false}
                 className="font-mono group"
                 render={
-                  <Link href="https://zhongzhuantoken.com/register" target="_top">
+                  <Link href="/register">
                     立即开始
                     <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
                   </Link>

@@ -12,7 +12,6 @@ import {
   KeyRound,
   LineChart,
   ListChecks,
-  Megaphone,
   Plus,
   ReceiptText,
   Settings,
@@ -48,21 +47,12 @@ export default function ConsolePage() {
   const [tokenTotal, setTokenTotal] = useState(0);
   const [tokensLoading, setTokensLoading] = useState(true);
   const [usageLogs, setUsageLogs] = useState<LogRow[] | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [noticeDismissed, setNoticeDismissed] = useState(false);
 
   useEffect(() => {
     // 公开，即使未登录也能拉
     api.status().then((r) => {
       if (r.success && r.data) setStatus(r.data);
     });
-    fetch("/api/notice", { credentials: "include" })
-      .then((r) => r.text())
-      .then((t) => {
-        const clean = t?.trim();
-        if (clean && clean.length > 0 && clean !== "null") setNotice(clean);
-      })
-      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -113,29 +103,6 @@ export default function ConsolePage() {
   return (
     <section className="border-b border-border">
       <div className="mx-auto max-w-7xl px-6 py-12 md:py-16">
-        {/* 公告 banner */}
-        {notice && !noticeDismissed ? (
-          <div className="mb-8 flex items-start gap-3 border border-brand/30 bg-brand/5 p-4">
-            <Megaphone className="mt-0.5 size-4 shrink-0 text-brand" />
-            <div className="flex-1 font-mono text-xs leading-relaxed text-foreground/80">
-              <div className="mb-1 text-[10px] uppercase tracking-wider text-brand">
-                NOTICE · 系统公告
-              </div>
-              <div
-                className="prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: notice }}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => setNoticeDismissed(true)}
-              className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-brand"
-            >
-              关闭
-            </button>
-          </div>
-        ) : null}
-
         {/* Header */}
         <div className="mb-10 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
@@ -143,11 +110,8 @@ export default function ConsolePage() {
               CONSOLE · 控制台
             </div>
             <h1 className="mt-2 font-mono text-3xl font-semibold tracking-tight md:text-4xl">
-              欢迎回来,{user.display_name || user.username}
+              欢迎回来，{user.display_name || user.username}
             </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              组别 {user.group} · 用户 #{user.id}
-            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button

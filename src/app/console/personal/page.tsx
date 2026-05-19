@@ -627,7 +627,7 @@ function TwoFAControl() {
             )}
           </div>
           <div className="font-mono text-[11px] text-muted-foreground/80">
-            2FA 启用/关闭流程在 New API 默认主题 personal 页操作，本前端暂未实现 setup UI。
+            如需开启/关闭 2FA，请联系客服微信 <span className="text-foreground">Mou_zaisi</span> 协助。
           </div>
         </div>
       ) : null}

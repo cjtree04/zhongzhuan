@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
+  ALL_MODELS,
   GROUP_RATIO,
   PROVIDERS,
   formatRmb,
@@ -18,12 +19,48 @@ import {
   type Provider,
 } from "@/lib/pricing";
 
+/** 把 badge="旗舰" / "性价比" 的模型聚合成虚拟 tab */
+const FLAGSHIP = ALL_MODELS.filter((m) => m.badge === "旗舰");
+const VALUE = ALL_MODELS.filter((m) => m.badge === "性价比");
+
+type TabDef = {
+  id: string;
+  tabLabel: string;
+  name: string;
+  description: string;
+  full: ModelRow[];
+};
+
+const ALL_TABS: TabDef[] = [
+  {
+    id: "flagship",
+    tabLabel: "旗舰",
+    name: "旗舰模型",
+    description: "各厂商最强模型,适合复杂推理、代码、创意写作。",
+    full: FLAGSHIP,
+  },
+  {
+    id: "value",
+    tabLabel: "性价比",
+    name: "性价比之选",
+    description: "便宜量大,适合日常对话、批量处理、轻量推理。",
+    full: VALUE,
+  },
+  ...PROVIDERS.map((p) => ({
+    id: p.id,
+    tabLabel: p.tabLabel,
+    name: p.name,
+    description: p.description,
+    full: p.full,
+  })),
+];
+
 export function PricingExplorer() {
   const [q, setQ] = useState("");
 
   const filtered = useMemo(
     () =>
-      PROVIDERS.map((p) => ({
+      ALL_TABS.map((p) => ({
         ...p,
         rows: p.full.filter((r) =>
           [r.model, r.display].some((s) =>
@@ -52,7 +89,7 @@ export function PricingExplorer() {
         </div>
       </div>
 
-      <Tabs defaultValue="claude" className="gap-0">
+      <Tabs defaultValue="flagship" className="gap-0">
         <TabsList variant="line" className="mb-6 gap-1 bg-transparent">
           {filtered.map((p) => (
             <TabsTrigger key={p.id} value={p.id} className="font-mono px-3">
@@ -71,9 +108,14 @@ export function PricingExplorer() {
               <div className="border border-border bg-background">
                 {/* Title */}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-5">
-                  <h2 className="font-mono text-2xl font-semibold tracking-tight">
-                    {p.name} · {p.tabLabel} 全系
-                  </h2>
+                  <div>
+                    <h2 className="font-mono text-2xl font-semibold tracking-tight">
+                      {p.name}
+                    </h2>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {p.description}
+                    </p>
+                  </div>
                   {max > 0 ? (
                     <div className="inline-flex items-center gap-2 border border-brand/30 bg-brand/10 px-3 py-1 font-mono text-xs text-brand">
                       <span className="size-1.5 rounded-full bg-brand" />
