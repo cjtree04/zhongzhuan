@@ -145,9 +145,9 @@ export default function TopUpPage() {
       setPayError("支付配置未加载");
       return;
     }
-    const minRmb = Math.max(info.min_topup, usdToRmb(10));
+    const minRmb = usdToRmb(10);
     if (amount < minRmb) {
-      setPayError(`最低充值 $10(约 ¥${minRmb.toFixed(2)})`);
+      setPayError(`最低充值 $10(¥${minRmb.toFixed(2)})`);
       return;
     }
     if (!selectedMethod) {
