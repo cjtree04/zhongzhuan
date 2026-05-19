@@ -28,12 +28,13 @@ import { useAuth } from "@/lib/use-auth";
 import { formatRmbHint, formatUsd } from "@/lib/format-quota";
 import { GROUP_RATIO, TOPUP_RATE } from "@/lib/pricing";
 
-/** 充值快捷金额(USD,固定 5 档) */
+/** 充值快捷金额(USD,固定 5 档)
+ * 注意:整个 topup 页面的 `amount` state 是「美元」单位,
+ * 后端 /api/user/pay 和 /api/user/amount 接收的 amount 也是美元(后端按 amount × 0.42 算实付人民币)。
+ * 不要在前端做 RMB↔USD 转换 — 否则会算错支付金额。
+ */
 const PRESET_USD = [10, 50, 100, 200, 500];
-
-/** RMB → USD 显示金额。汇率倒推:¥0.42 = $1 → 1 RMB = 1/0.42 USD ≈ $2.38 */
-const rmbToUsd = (rmb: number) => rmb / TOPUP_RATE;
-const usdToRmb = (usd: number) => +(usd * TOPUP_RATE).toFixed(2);
+const MIN_USD = 10;
 const formatUsdInline = (usd: number) => {
   if (usd >= 100) return `$${usd.toFixed(0)}`;
   if (usd >= 10) return `$${usd.toFixed(1)}`;
@@ -145,9 +146,8 @@ export default function TopUpPage() {
       setPayError("支付配置未加载");
       return;
     }
-    const minRmb = usdToRmb(10);
-    if (amount < minRmb) {
-      setPayError(`最低充值 $10(¥${minRmb.toFixed(2)})`);
+    if (amount < MIN_USD) {
+      setPayError(`最低充值 $${MIN_USD}(¥${(MIN_USD * TOPUP_RATE).toFixed(2)})`);
       return;
     }
     if (!selectedMethod) {
@@ -307,13 +307,13 @@ export default function TopUpPage() {
                     </Label>
                     <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                       {PRESET_USD.map((usd) => {
-                        const rmb = usdToRmb(usd);
-                        const active = Math.abs(amount - rmb) < 0.01;
+                        const rmb = +(usd * TOPUP_RATE).toFixed(2);
+                        const active = Math.abs(amount - usd) < 0.01;
                         return (
                           <button
                             key={usd}
                             type="button"
-                            onClick={() => setAmount(rmb)}
+                            onClick={() => setAmount(usd)}
                             className={cn(
                               "flex flex-col items-center gap-0.5 border px-3 py-2 font-mono transition-colors",
                               active
@@ -348,22 +348,22 @@ export default function TopUpPage() {
                       <Input
                         id="amount_usd"
                         type="number"
-                        min={10}
+                        min={MIN_USD}
                         step={1}
-                        value={amount > 0 ? rmbToUsd(amount).toFixed(2) : ""}
+                        value={amount > 0 ? amount : ""}
                         onChange={(e) =>
-                          setAmount(usdToRmb(Math.max(0, Number(e.target.value))))
+                          setAmount(Math.max(0, Number(e.target.value)))
                         }
-                        placeholder="10"
+                        placeholder={String(MIN_USD)}
                         className="pl-7 font-mono text-lg"
                       />
                     </div>
                     {amount > 0 ? (
                       <div className="font-mono text-xs text-muted-foreground">
-                        实付 ¥{(previewMoney ?? amount).toFixed(2)}
-                        {previewMoney !== null && previewMoney < amount ? (
+                        实付 ¥{(previewMoney ?? amount * TOPUP_RATE).toFixed(2)}
+                        {previewMoney !== null && previewMoney < amount * TOPUP_RATE ? (
                           <span className="ml-1 text-brand">
-                            (优惠 ¥{(amount - previewMoney).toFixed(2)})
+                            (优惠 ¥{(amount * TOPUP_RATE - previewMoney).toFixed(2)})
                           </span>
                         ) : null}
                       </div>
@@ -431,7 +431,7 @@ export default function TopUpPage() {
                     onClick={submitPay}
                     disabled={
                       payLoading ||
-                      amount < usdToRmb(10) ||
+                      amount < MIN_USD ||
                       !selectedMethod
                     }
                   >
@@ -446,9 +446,9 @@ export default function TopUpPage() {
                         去支付
                         {amount > 0 ? (
                           <span className="ml-1">
-                            {formatUsdInline(rmbToUsd(amount))}
+                            {formatUsdInline(amount)}
                             <span className="ml-1 text-[10px] opacity-80">
-                              (¥{(previewMoney ?? amount).toFixed(2)})
+                              (¥{(previewMoney ?? amount * TOPUP_RATE).toFixed(2)})
                             </span>
                           </span>
                         ) : null}
