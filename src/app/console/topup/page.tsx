@@ -26,7 +26,10 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/use-auth";
 
 import { formatRmbHint, formatUsd } from "@/lib/format-quota";
-import { TOPUP_RATE } from "@/lib/pricing";
+import { GROUP_RATIO, TOPUP_RATE } from "@/lib/pricing";
+
+/** 充值快捷金额(USD,固定 5 档) */
+const PRESET_USD = [10, 50, 100, 200, 500];
 
 /** RMB → USD 显示金额。汇率倒推:¥0.42 = $1 → 1 RMB = 1/0.42 USD ≈ $2.38 */
 const rmbToUsd = (rmb: number) => rmb / TOPUP_RATE;
@@ -222,6 +225,28 @@ export default function TopUpPage() {
           </div>
         </div>
 
+        {/* 充值规则说明 */}
+        <div className="mb-8 border border-brand/30 bg-brand/5 p-5">
+          <div className="flex flex-col gap-2 md:flex-row md:items-baseline md:gap-4">
+            <div className="flex items-baseline gap-2 font-mono">
+              <span className="text-2xl font-semibold text-foreground md:text-3xl">
+                ¥{TOPUP_RATE}
+              </span>
+              <span className="text-lg text-muted-foreground md:text-xl">=</span>
+              <span className="text-2xl font-semibold text-brand md:text-3xl">
+                $1
+              </span>
+              <span className="ml-1 font-mono text-xs text-muted-foreground">
+                美元额度
+              </span>
+            </div>
+            <div className="font-mono text-xs leading-relaxed text-muted-foreground md:text-sm">
+              充 ¥{(TOPUP_RATE * 100).toFixed(0)} 得 $100 美元额度,按厂商官方价扣费(Claude {GROUP_RATIO.claude}× 倍率)。
+              余额永不过期,不接受退款,按需充值。
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.4fr_1fr]">
           {/* 左:充值方式 */}
           <div className="space-y-6">
@@ -275,39 +300,38 @@ export default function TopUpPage() {
                   </h2>
                 </div>
                 <div className="space-y-6 p-6">
-                  {/* 金额预设 */}
-                  {info.amount_options && info.amount_options.length > 0 ? (
-                    <div className="space-y-2">
-                      <Label className="font-mono text-[11px] uppercase tracking-wider">
-                        快捷金额
-                      </Label>
-                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                        {info.amount_options.map((opt) => {
-                          const usd = rmbToUsd(opt);
-                          return (
-                            <button
-                              key={opt}
-                              type="button"
-                              onClick={() => setAmount(opt)}
-                              className={cn(
-                                "flex flex-col items-center gap-0.5 border px-3 py-2 font-mono transition-colors",
-                                amount === opt
-                                  ? "border-brand bg-brand/10 text-brand"
-                                  : "border-border bg-background text-foreground hover:border-brand/50",
-                              )}
-                            >
-                              <span className="text-sm font-semibold">
-                                {formatUsdInline(usd)}
-                              </span>
-                              <span className="text-[10px] text-muted-foreground">
-                                ¥{opt}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                  {/* 金额预设(固定 5 档美元) */}
+                  <div className="space-y-2">
+                    <Label className="font-mono text-[11px] uppercase tracking-wider">
+                      快捷金额
+                    </Label>
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                      {PRESET_USD.map((usd) => {
+                        const rmb = usdToRmb(usd);
+                        const active = Math.abs(amount - rmb) < 0.01;
+                        return (
+                          <button
+                            key={usd}
+                            type="button"
+                            onClick={() => setAmount(rmb)}
+                            className={cn(
+                              "flex flex-col items-center gap-0.5 border px-3 py-2 font-mono transition-colors",
+                              active
+                                ? "border-brand bg-brand/10 text-brand"
+                                : "border-border bg-background text-foreground hover:border-brand/50",
+                            )}
+                          >
+                            <span className="text-base font-semibold">
+                              ${usd}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              ¥{rmb.toFixed(rmb >= 10 ? 0 : 1)}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
-                  ) : null}
+                  </div>
 
                   {/* 自定义金额(USD 输入) */}
                   <div className="space-y-2">
