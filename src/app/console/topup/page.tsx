@@ -5,13 +5,11 @@ import Link from "next/link";
 import {
   ArrowLeft,
   CheckCircle2,
-  Clock,
   CreditCard,
   Gift,
   History,
   Loader2,
   Sparkles,
-  XCircle,
 } from "lucide-react";
 
 import { FormError, FormSuccess } from "@/components/auth-card";
@@ -20,35 +18,36 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   api,
+  type LogRow,
   type SiteStatus,
   type TopUpInfo,
-  type TopUpRecord,
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/use-auth";
 
 import { formatRmbHint, formatUsd } from "@/lib/format-quota";
+import { TOPUP_RATE } from "@/lib/pricing";
+
+/** RMB → USD 显示金额。汇率倒推:¥0.42 = $1 → 1 RMB = 1/0.42 USD ≈ $2.38 */
+const rmbToUsd = (rmb: number) => rmb / TOPUP_RATE;
+const usdToRmb = (usd: number) => +(usd * TOPUP_RATE).toFixed(2);
+const formatUsdInline = (usd: number) => {
+  if (usd >= 100) return `$${usd.toFixed(0)}`;
+  if (usd >= 10) return `$${usd.toFixed(1)}`;
+  return `$${usd.toFixed(2)}`;
+};
 
 function formatTime(unix: number): string {
   if (!unix) return "—";
   return new Date(unix * 1000).toLocaleString("zh-CN");
 }
 
-const STATUS_META: Record<
-  string,
-  { label: string; icon: typeof CheckCircle2; cls: string }
-> = {
-  success: { label: "已完成", icon: CheckCircle2, cls: "text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10" },
-  pending: { label: "处理中", icon: Clock, cls: "text-amber-600 dark:text-amber-400 border-amber-500/30 bg-amber-500/10" },
-  failed: { label: "失败", icon: XCircle, cls: "text-destructive border-destructive/30 bg-destructive/10" },
-  cancelled: { label: "已取消", icon: XCircle, cls: "text-muted-foreground border-border bg-secondary" },
-};
 
 export default function TopUpPage() {
   const { user, loading: authLoading } = useAuth();
   const [status, setStatus] = useState<SiteStatus | null>(null);
   const [info, setInfo] = useState<TopUpInfo | null>(null);
-  const [history, setHistory] = useState<TopUpRecord[]>([]);
+  const [history, setHistory] = useState<LogRow[]>([]);
 
   // 兑换码
   const [code, setCode] = useState("");
@@ -85,8 +84,8 @@ export default function TopUpPage() {
         }
       }
     });
-    api.topupHistory().then((r) => {
-      if (r.success && r.data) setHistory(r.data.slice(0, 8));
+    api.topupHistory(8).then((r) => {
+      if (r.success && r.data?.items) setHistory(r.data.items);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -143,8 +142,9 @@ export default function TopUpPage() {
       setPayError("支付配置未加载");
       return;
     }
-    if (amount < info.min_topup) {
-      setPayError(`最低充值 ¥${info.min_topup}`);
+    const minRmb = Math.max(info.min_topup, usdToRmb(10));
+    if (amount < minRmb) {
+      setPayError(`最低充值 $10(约 ¥${minRmb.toFixed(2)})`);
       return;
     }
     if (!selectedMethod) {
@@ -282,50 +282,64 @@ export default function TopUpPage() {
                         快捷金额
                       </Label>
                       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                        {info.amount_options.map((opt) => (
-                          <button
-                            key={opt}
-                            type="button"
-                            onClick={() => setAmount(opt)}
-                            className={cn(
-                              "border px-3 py-2 font-mono text-sm transition-colors",
-                              amount === opt
-                                ? "border-brand bg-brand/10 text-brand"
-                                : "border-border bg-background text-foreground hover:border-brand/50",
-                            )}
-                          >
-                            ¥{opt}
-                          </button>
-                        ))}
+                        {info.amount_options.map((opt) => {
+                          const usd = rmbToUsd(opt);
+                          return (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => setAmount(opt)}
+                              className={cn(
+                                "flex flex-col items-center gap-0.5 border px-3 py-2 font-mono transition-colors",
+                                amount === opt
+                                  ? "border-brand bg-brand/10 text-brand"
+                                  : "border-border bg-background text-foreground hover:border-brand/50",
+                              )}
+                            >
+                              <span className="text-sm font-semibold">
+                                {formatUsdInline(usd)}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                ¥{opt}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   ) : null}
 
-                  {/* 自定义金额 */}
+                  {/* 自定义金额(USD 输入) */}
                   <div className="space-y-2">
                     <Label
-                      htmlFor="amount"
+                      htmlFor="amount_usd"
                       className="font-mono text-[11px] uppercase tracking-wider"
                     >
-                      自定义金额(最低 ¥{info.min_topup})
+                      自定义金额(最低 $10)
                     </Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      min={info.min_topup}
-                      value={amount || ""}
-                      onChange={(e) =>
-                        setAmount(Math.max(0, Number(e.target.value)))
-                      }
-                      placeholder={`¥${info.min_topup}`}
-                      className="font-mono text-lg"
-                    />
-                    {previewMoney !== null && amount >= info.min_topup ? (
+                    <div className="relative">
+                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono text-base text-muted-foreground">
+                        $
+                      </span>
+                      <Input
+                        id="amount_usd"
+                        type="number"
+                        min={10}
+                        step={1}
+                        value={amount > 0 ? rmbToUsd(amount).toFixed(2) : ""}
+                        onChange={(e) =>
+                          setAmount(usdToRmb(Math.max(0, Number(e.target.value))))
+                        }
+                        placeholder="10"
+                        className="pl-7 font-mono text-lg"
+                      />
+                    </div>
+                    {amount > 0 ? (
                       <div className="font-mono text-xs text-muted-foreground">
-                        实付 ¥{previewMoney.toFixed(2)}
-                        {previewMoney < amount ? (
+                        实付 ¥{(previewMoney ?? amount).toFixed(2)}
+                        {previewMoney !== null && previewMoney < amount ? (
                           <span className="ml-1 text-brand">
-                            (省 ¥{(amount - previewMoney).toFixed(2)})
+                            (优惠 ¥{(amount - previewMoney).toFixed(2)})
                           </span>
                         ) : null}
                       </div>
@@ -361,21 +375,27 @@ export default function TopUpPage() {
                       支付方式
                     </Label>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      {info.pay_methods.map((m) => (
-                        <button
-                          key={m.type}
-                          type="button"
-                          onClick={() => setSelectedMethod(m.type)}
-                          className={cn(
-                            "flex items-center justify-center gap-2 border px-3 py-2 font-mono text-sm transition-colors",
-                            selectedMethod === m.type
-                              ? "border-brand bg-brand/10 text-brand"
-                              : "border-border bg-background text-foreground hover:border-brand/50",
-                          )}
-                        >
-                          {m.name}
-                        </button>
-                      ))}
+                      {info.pay_methods
+                        .filter(
+                          (m) =>
+                            !m.name.includes("自定义") &&
+                            !/^custom/i.test(m.type),
+                        )
+                        .map((m) => (
+                          <button
+                            key={m.type}
+                            type="button"
+                            onClick={() => setSelectedMethod(m.type)}
+                            className={cn(
+                              "flex items-center justify-center gap-2 border px-3 py-2 font-mono text-sm transition-colors",
+                              selectedMethod === m.type
+                                ? "border-brand bg-brand/10 text-brand"
+                                : "border-border bg-background text-foreground hover:border-brand/50",
+                            )}
+                          >
+                            {m.name}
+                          </button>
+                        ))}
                     </div>
                   </div>
 
@@ -387,7 +407,7 @@ export default function TopUpPage() {
                     onClick={submitPay}
                     disabled={
                       payLoading ||
-                      amount < info.min_topup ||
+                      amount < usdToRmb(10) ||
                       !selectedMethod
                     }
                   >
@@ -400,11 +420,14 @@ export default function TopUpPage() {
                       <>
                         <CreditCard />
                         去支付
-                        {previewMoney !== null
-                          ? ` ¥${previewMoney.toFixed(2)}`
-                          : amount > 0
-                            ? ` ¥${amount}`
-                            : ""}
+                        {amount > 0 ? (
+                          <span className="ml-1">
+                            {formatUsdInline(rmbToUsd(amount))}
+                            <span className="ml-1 text-[10px] opacity-80">
+                              (¥{(previewMoney ?? amount).toFixed(2)})
+                            </span>
+                          </span>
+                        ) : null}
                       </>
                     )}
                   </Button>
@@ -438,41 +461,30 @@ export default function TopUpPage() {
               </div>
             ) : (
               <div className="divide-y divide-border">
-                {history.map((rec) => {
-                  const meta =
-                    STATUS_META[rec.status] || STATUS_META.cancelled;
-                  const Icon = meta.icon;
-                  return (
-                    <div
-                      key={rec.id}
-                      className="space-y-1.5 px-6 py-4 transition-colors hover:bg-secondary/30"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="font-mono text-base font-semibold text-foreground">
-                          ¥{rec.money?.toFixed(2) ?? rec.amount}
-                        </div>
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider",
-                            meta.cls,
-                          )}
-                        >
-                          <Icon className="size-3" />
-                          {meta.label}
-                        </span>
+                {history.map((rec) => (
+                  <div
+                    key={rec.id}
+                    className="space-y-1.5 px-6 py-4 transition-colors hover:bg-secondary/30"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-mono text-base font-semibold text-brand">
+                        + {formatUsd(rec.quota, status)}
                       </div>
-                      <div className="font-mono text-[11px] text-muted-foreground">
-                        {rec.payment_method || "兑换码"} ·{" "}
-                        {formatTime(rec.create_time)}
-                      </div>
-                      {rec.trade_no ? (
-                        <div className="truncate font-mono text-[10px] text-muted-foreground/70">
-                          {rec.trade_no}
-                        </div>
-                      ) : null}
+                      <span className="inline-flex items-center gap-1 border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                        <CheckCircle2 className="size-3" />
+                        已到账
+                      </span>
                     </div>
-                  );
-                })}
+                    <div className="font-mono text-[10px] text-muted-foreground">
+                      {formatRmbHint(rec.quota, status)} · {formatTime(rec.created_at)}
+                    </div>
+                    {rec.content ? (
+                      <div className="truncate font-mono text-[10px] text-muted-foreground/70">
+                        {rec.content}
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
               </div>
             )}
             <div className="border-t border-border px-6 py-3">

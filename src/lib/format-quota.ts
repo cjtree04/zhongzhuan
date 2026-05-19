@@ -32,7 +32,7 @@ export function formatUsdPrecise(quota: number, status: SiteStatus | null): stri
   return `$${usd.toFixed(6)}`;
 }
 
-/** quota → "≈ ¥X.XX" 人民币换算(副显示,按充值汇率 0.4) */
+/** quota → "≈ ¥X.XX" 人民币换算(副显示,按充值汇率 TOPUP_RATE) */
 export function formatRmbHint(quota: number, status: SiteStatus | null): string {
   const cny = quotaToUsd(quota, status) * TOPUP_RATE;
   if (cny >= 100) return `≈ ¥${cny.toFixed(0)}`;

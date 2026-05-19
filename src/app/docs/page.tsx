@@ -28,7 +28,7 @@ export default function DocsPage() {
             </div>
             <p>
               <strong>API Key</strong> 请先在控制台「
-              <a href={`${BASE}/token`} className="text-brand underline-offset-2 hover:underline">
+              <a href="/console/token" className="text-brand underline-offset-2 hover:underline">
                 令牌管理
               </a>
               」生成。下文示例中所有的 <Inline>YOUR_KEY</Inline> 替换为你自己的 Key 即可。
@@ -37,10 +37,102 @@ export default function DocsPage() {
 
           {/* ───────────── Part 1 ───────────── */}
           <Section id="part1" title="第一部分 · 网站使用文档" eyebrow="PART 01">
-            <Placeholder>
-              这一部分将随网站功能(注册、充值、令牌、监控、邀请)逐步上线，目前留位待补。
-              先用第二部分的 Agent 配置指南即可开始接入。
-            </Placeholder>
+            <p>
+              从零到第一次成功调用,大概需要 5 分钟。下面 6 步走完就能用。
+            </p>
+
+            <Step n={1} title="注册账号" />
+            <p>
+              访问 <a href="/register" className="text-brand underline-offset-2 hover:underline">/register</a>，
+              填邮箱 + 用户名 + 密码,点「发送验证码」会收到一封 6 位字符(字母+数字)的验证码邮件。
+              填进验证码后点注册,几秒后跳转到控制台。
+            </p>
+            <p className="text-sm text-muted-foreground">
+              没收到?检查垃圾邮件;或换一个常用邮箱重试。我们通过 Resend 发送,送达率 99%+。
+            </p>
+
+            <Step n={2} title="充值余额" />
+            <p>
+              控制台点「充值」或直接访问 <a href="/console/topup" className="text-brand underline-offset-2 hover:underline">/console/topup</a>。
+              定价非常简单:
+            </p>
+            <div className="border border-brand/30 bg-brand/5 p-4 font-mono text-sm">
+              <div>充值汇率 <span className="font-bold text-brand">¥0.42 = $1</span> 美元额度</div>
+              <div className="mt-1 text-muted-foreground text-xs">
+                即:充 ¥42 = $100 美元额度。最低充值 $10($10 ≈ ¥4.2)。
+              </div>
+            </div>
+            <p>
+              支持支付宝、微信。支付完成后页面会自动刷新余额,几秒内到账。
+              如果显示"暂无充值记录"但余额已涨,说明记录还在同步,刷新页面即可。
+            </p>
+
+            <Step n={3} title="创建 API Token" />
+            <p>
+              控制台点「令牌管理」(<a href="/console/token" className="text-brand underline-offset-2 hover:underline">/console/token</a>),
+              点「新建 Token」,填:
+            </p>
+            <ul className="ml-4 list-disc space-y-1.5 text-sm">
+              <li><strong>名称</strong>:给 token 取个标识,比如 <Inline>claude-code-mac</Inline></li>
+              <li><strong>额度</strong>:这个 token 最多能用多少美元。建议设 $20-50 限额,避免单个 token 泄露损失太大</li>
+              <li><strong>过期时间</strong>:可选「永不过期」或具体天数</li>
+            </ul>
+            <p>
+              创建后**立即复制并保存** API Key — 出于安全考虑,后续只能看到 masked 版本。
+              如果丢了就重新创建一个,Key 形如 <Inline>sk-xxxxxxxxxxxx</Inline>。
+            </p>
+
+            <Step n={4} title="对接 SDK / Agent" />
+            <p>
+              拿到 Key 后,跳到下面「第二部分 · Agent 接入配置」,选你用的工具(Claude Code / Codex / Cursor / OpenAI SDK / Anthropic SDK 等),
+              复制对应的环境变量贴到你的 shell / 配置文件里。
+            </p>
+            <p className="text-sm text-muted-foreground">
+              核心两个 base_url:OpenAI 兼容走 <Inline>{BASE}/v1</Inline>,
+              Anthropic 原生走 <Inline>{BASE}</Inline>(末尾不带 /v1)。
+            </p>
+
+            <Step n={5} title="监控用量" />
+            <p>
+              控制台首页(<a href="/console" className="text-brand underline-offset-2 hover:underline">/console</a>)
+              展示 4 张卡片:可用余额、累计消耗、Token 数、邀请奖励 —— 美元为主,人民币为辅。
+              下方有 7 天用量曲线和 Top 5 模型消费分布。
+            </p>
+            <p>
+              「日志」<a href="/console/log" className="text-brand underline-offset-2 hover:underline">/console/log</a> 是每一次 API 调用的明细:
+              模型 / 输入输出 token / 单次费用 / 用时 / IP。可按时间、模型、token 名筛选。
+            </p>
+
+            <Step n={6} title="邀请奖励(可选)" />
+            <p>
+              「个人设置」<a href="/console/personal" className="text-brand underline-offset-2 hover:underline">/console/personal</a>
+              页面底部有你的邀请链接和二维码。被邀请的用户首次充值后,你按规则获得一笔美元奖励,
+              可随时「转入账户余额」用于扣费。
+            </p>
+
+            <h3 className="mt-8 font-mono text-base font-semibold text-foreground">常见问题</h3>
+            <div className="space-y-3 mt-3">
+              <Faq q="Claude 系列模型为什么扣费看起来比标价多?">
+                Claude 系列(opus / sonnet / haiku)是 3× 倍率:消耗 $1 标价 = 实扣 $3 美元额度 = ¥1.26。
+                这是因为 Claude 上游号池采购成本更高。GPT / Gemini 全系都是 1× 倍率,即标价等于扣费。
+                详见 <a href="/pricing" className="text-brand underline-offset-2 hover:underline">价格表</a>。
+              </Faq>
+              <Faq q="账户余额能提现吗?">
+                不支持提现。充值进的是 API 调用余额,只能用于扣费。
+                所以建议按需充值,先充 $10-25 试用,确认体验后再加额度。
+              </Faq>
+              <Faq q="我充值后没收到充值记录怎么办?">
+                先看 /console 首页可用余额有没有涨;涨了就是到账了,只是「充值记录」列表可能在同步,刷新即可。
+                如果余额没涨且过了 5 分钟,联系客服并把支付凭证发过来,我们会人工核对。
+              </Faq>
+              <Faq q="Token 泄露了怎么办?">
+                去 /console/token 找到对应 token,点「禁用」或「删除」立即失效,然后重新创建一个新的。
+                所以建议给每个客户端 / 项目用独立 token,泄露的影响只限于那一个。
+              </Faq>
+              <Faq q="可以同时绑定多个邮箱吗?">
+                不可以。一个账号对应一个邮箱,可在「个人设置」里换绑(需要新邮箱验证码)。
+              </Faq>
+            </div>
           </Section>
 
           {/* ───────────── Part 2 ───────────── */}

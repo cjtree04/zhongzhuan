@@ -256,9 +256,16 @@ export const api = {
     return jsonFetch<TopUpInfo>("/api/user/topup/info", { method: "GET" });
   },
 
-  /** 用户充值记录 */
-  topupHistory() {
-    return jsonFetch<TopUpRecord[]>("/api/user/topup/self", { method: "GET" });
+  /**
+   * 用户充值记录。
+   * New API 没有独立的 topup history endpoint —— 充值历史是 logs 表里 type=1 的条目。
+   * 这里走通用 /api/log/self?type=1,把 LogRow 抽出来给前端展示。
+   */
+  topupHistory(pageSize = 20) {
+    return jsonFetch<Paginated<LogRow>>(
+      `/api/log/self?p=0&page_size=${pageSize}&type=1`,
+      { method: "GET" },
+    );
   },
 
   /** 兑换码兑换 */

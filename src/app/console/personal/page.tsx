@@ -134,6 +134,7 @@ function Section({
 // ─────────────────────────────────────────────────────────
 function ProfileSection({ user }: { user: SelfUser }) {
   const [displayName, setDisplayName] = useState(user.display_name || "");
+  const [originalPassword, setOriginalPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -163,13 +164,21 @@ function ProfileSection({ user }: { user: SelfUser }) {
       setError("昵称不能为空");
       return;
     }
+    if (!originalPassword) {
+      setError("请输入登录密码以确认修改");
+      return;
+    }
     setSaving(true);
-    const r = await api.updateSelf({ display_name: displayName.trim() });
+    const r = await api.updateSelf({
+      display_name: displayName.trim(),
+      original_password: originalPassword,
+    });
     setSaving(false);
     if (!r.success) {
       setError(r.message || "保存失败");
       return;
     }
+    setOriginalPassword("");
     setSuccess("昵称已保存");
   }
 
@@ -303,11 +312,33 @@ function ProfileSection({ user }: { user: SelfUser }) {
           </div>
         </div>
 
+        {/* 保存确认密码(后端 PUT /api/user 强制要求) */}
+        {displayName !== user.display_name ? (
+          <div className="border-t border-border pt-4">
+            <Label
+              htmlFor="confirm_password"
+              className="font-mono text-[11px] uppercase tracking-wider text-foreground"
+            >
+              登录密码 <span className="text-muted-foreground">(确认修改用)</span>
+            </Label>
+            <Input
+              id="confirm_password"
+              type="password"
+              value={originalPassword}
+              onChange={(e) => setOriginalPassword(e.target.value)}
+              placeholder="输入你的登录密码"
+              className="mt-2 font-mono"
+              disabled={saving}
+              autoComplete="current-password"
+            />
+          </div>
+        ) : null}
+
         <FormError message={error} />
         <FormSuccess message={success} />
 
         <div className="flex justify-end">
-          <Button type="submit" className="font-mono" disabled={saving || displayName === user.display_name}>
+          <Button type="submit" className="font-mono" disabled={saving || displayName === user.display_name || !originalPassword}>
             {saving ? "保存中…" : "保存昵称"}
           </Button>
         </div>

@@ -3,15 +3,15 @@
  *
  * 真实算法(对照站点后台 New API 设置):
  * ──────────────────────────────────────────────────────────────
- * · 充值比例: ¥0.4 → $1 余额(固定，与人民币汇率脱钩)
+ * · 充值比例: ¥0.42 → $1 余额(固定，与人民币汇率脱钩)
  * · 消耗倍率(group_ratio):
- *     - GPT / Gemini: 1× → 用 $1 显示价时，扣 $1 余额 = ¥0.4
- *     - Claude(全系): 3× → 用 $1 显示价时，扣 $3 余额 = ¥1.2
+ *     - GPT / Gemini: 1× → 用 $1 显示价时，扣 $1 余额 = ¥0.42
+ *     - Claude(全系): 3× → 用 $1 显示价时，扣 $3 余额 = ¥1.26
  * · 我家"实际人民币成本" = official_usd × ratio × TOPUP_RATE
  * · 对比官方"真实人民币成本" = official_usd × USD_TO_CNY (按真实汇率 ≈ 7)
  * · 节省比例 = 1 − ratio × TOPUP_RATE / USD_TO_CNY
- *     - GPT/Gemini: 1 − 0.4/7 ≈ 94%
- *     - Claude:     1 − 3×0.4/7 ≈ 83%
+ *     - GPT/Gemini: 1 − 0.42/7 ≈ 94%
+ *     - Claude:     1 − 3×0.42/7 ≈ 82%
  *
  * 想调整:
  * · 充值比例 → TOPUP_RATE
@@ -22,7 +22,7 @@
  * 数据源:对标 thinkai.tv/pricing(2026-05-19 抓取),20 个模型同步。
  */
 
-export const TOPUP_RATE = 0.4; // ¥ per $ of balance
+export const TOPUP_RATE = 0.42; // ¥ per $ of balance
 export const USD_TO_CNY = 7; // official market rate, used only for savings comparison
 
 export type Provider = "claude" | "gpt" | "gemini";
@@ -209,7 +209,7 @@ export function formatUsd(n: number | undefined): string {
   return `$${n.toFixed(6)}`;
 }
 
-/** USD 余额 → 等价人民币(按充值汇率 0.4) */
+/** USD 余额 → 等价人民币(按充值汇率 TOPUP_RATE) */
 export function usdToRmbBalance(usd: number): number {
   return usd * TOPUP_RATE;
 }
