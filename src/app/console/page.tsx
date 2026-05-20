@@ -409,17 +409,6 @@ function TokenRowDisplay({
   token: TokenRow;
   status: SiteStatus | null;
 }) {
-  const [copied, setCopied] = useState(false);
-
-  async function copyMaskedKey() {
-    // masked key 复制无意义，但用户体验上需要一个反馈
-    try {
-      await navigator.clipboard.writeText(`sk-${token.key}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {}
-  }
-
   return (
     <div className="flex flex-wrap items-center gap-4 px-6 py-4 transition-colors hover:bg-secondary/30">
       <div className="min-w-0 flex-1">
@@ -463,16 +452,6 @@ function TokenRowDisplay({
           </div>
         </div>
       ) : null}
-
-      <Button
-        size="icon-sm"
-        variant="ghost"
-        onClick={copyMaskedKey}
-        title={copied ? "已复制" : "复制(masked)"}
-        className="text-muted-foreground"
-      >
-        <Copy />
-      </Button>
     </div>
   );
 }

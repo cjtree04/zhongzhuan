@@ -6,12 +6,12 @@
  * · 充值比例: ¥0.42 → $1 余额(固定，与人民币汇率脱钩)
  * · 消耗倍率(group_ratio):
  *     - GPT / Gemini: 1× → 用 $1 显示价时，扣 $1 余额 = ¥0.42
- *     - Claude(全系): 3× → 用 $1 显示价时，扣 $3 余额 = ¥1.26
+ *     - Claude(全系): 5× → 用 $1 显示价时，扣 $5 余额 = ¥2.10
  * · 我家"实际人民币成本" = official_usd × ratio × TOPUP_RATE
  * · 对比官方"真实人民币成本" = official_usd × USD_TO_CNY (按真实汇率 ≈ 7)
  * · 节省比例 = 1 − ratio × TOPUP_RATE / USD_TO_CNY
  *     - GPT/Gemini: 1 − 0.42/7 ≈ 94%
- *     - Claude:     1 − 3×0.42/7 ≈ 82%
+ *     - Claude:     1 − 5×0.42/7 ≈ 70%
  *
  * 想调整:
  * · 充值比例 → TOPUP_RATE
@@ -28,7 +28,7 @@ export const USD_TO_CNY = 7; // official market rate, used only for savings comp
 export type Provider = "claude" | "gpt" | "gemini";
 
 export const GROUP_RATIO: Record<Provider, number> = {
-  claude: 3,
+  claude: 5,
   gpt: 1,
   gemini: 1,
 };

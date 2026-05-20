@@ -1,5 +1,6 @@
 import { CodeBlock } from "@/components/code-block";
 import { DocsSidebar } from "@/components/docs-sidebar";
+import { Endpoint } from "@/components/docs-endpoint";
 import { GROUP_RATIO, TOPUP_RATE } from "@/lib/pricing";
 
 export const metadata = {
@@ -439,22 +440,6 @@ function Step({ n, title }: { n: number; title: string }) {
       <h3 className="font-mono text-sm font-semibold tracking-wide text-foreground">
         {title}
       </h3>
-    </div>
-  );
-}
-
-function Endpoint({ label, url, note }: { label: string; url: string; note?: string }) {
-  return (
-    <div className="border border-border bg-secondary/40 p-4">
-      <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
-      <div className="mt-1 font-mono text-sm font-medium text-brand break-all">
-        {url}
-      </div>
-      {note ? (
-        <div className="mt-1 text-[11px] text-muted-foreground">{note}</div>
-      ) : null}
     </div>
   );
 }

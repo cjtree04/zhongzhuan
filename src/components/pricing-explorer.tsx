@@ -149,7 +149,7 @@ function FullRow({ row }: { row: ModelRow }) {
           {row.provider === "claude" ? (
             <span
               className="border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-amber-700 dark:text-amber-400"
-              title="Claude 系列倍率 3×:消耗 $1 标价时扣 $3 美元余额"
+              title={`Claude 系列倍率 ${GROUP_RATIO.claude}×:消耗 $1 标价时扣 $${GROUP_RATIO.claude} 美元余额`}
             >
               ×{GROUP_RATIO.claude}
             </span>
