@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Check, Copy, Search } from "lucide-react";
+import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -138,14 +139,36 @@ export function PricingExplorer() {
 
 function FullRow({ row }: { row: ModelRow }) {
   const saved = savingsPercentFor(row.provider);
-  // cacheWrite cell shows the 5min variant (most common); 1h is in tooltip-style hint
+  const [copied, setCopied] = useState(false);
+
+  async function copyModelName() {
+    try {
+      await navigator.clipboard.writeText(row.model);
+      setCopied(true);
+      toast.success(`已复制模型名:${row.model}`);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast.error("复制失败，请手动选中文本");
+    }
+  }
+
   return (
     <div className="grid grid-cols-2 items-center gap-3 px-6 py-4 transition-colors hover:bg-secondary/30 md:grid-cols-[1.6fr_repeat(4,1fr)_auto] md:gap-4">
       <div className="col-span-2 md:col-span-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-mono text-sm font-medium text-foreground">
+          <button
+            type="button"
+            onClick={copyModelName}
+            title={copied ? "已复制" : "点击复制模型名"}
+            className="group inline-flex items-center gap-1.5 border border-transparent px-1 py-0.5 font-mono text-sm font-medium text-foreground transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand"
+          >
             {row.display}
-          </span>
+            {copied ? (
+              <Check className="size-3 text-brand" />
+            ) : (
+              <Copy className="size-3 text-muted-foreground/60 transition-colors group-hover:text-brand" />
+            )}
+          </button>
           {row.provider === "claude" ? (
             <span
               className="border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-amber-700 dark:text-amber-400"
@@ -168,7 +191,7 @@ function FullRow({ row }: { row: ModelRow }) {
           ) : null}
         </div>
         {row.model !== row.display ? (
-          <div className="mt-0.5 font-mono text-[10px] text-muted-foreground/70">
+          <div className="mt-0.5 pl-1 font-mono text-[10px] text-muted-foreground/70">
             {row.model}
           </div>
         ) : null}

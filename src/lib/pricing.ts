@@ -19,7 +19,7 @@
  * · 某家倍率 → GROUP_RATIO
  * · 单个模型价 → 改 LineItem.price
  *
- * 数据源:对标 thinkai.tv/pricing(2026-05-19 抓取),20 个模型同步。
+ * 数据源:对标 thinkai.tv/pricing(2026-05-21 抓取),15 个模型同步,与本站后端一致。
  */
 
 export const TOPUP_RATE = 0.42; // ¥ per $ of balance
@@ -46,7 +46,7 @@ export type ModelRow = {
   provider: Provider;
   /** Official USD prices per 1M tokens (synced with thinkai.tv/pricing). */
   price: Price;
-  /** Optional badge text (e.g. "旗舰", "Codex", "图像"). */
+  /** Optional badge text (e.g. "旗舰", "Codex", "性价比"). */
   badge?: string;
 };
 
@@ -70,53 +70,43 @@ const CLAUDE: ModelRow[] = [
   { model: "claude-opus-4-5-20251101", display: "claude-opus-4-5", provider: "claude",
     price: { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 } },
   { model: "claude-sonnet-4-6", display: "claude-sonnet-4-6", provider: "claude",
-    price: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 } },
+    price: { input: 3, output: 15, cacheRead: 1, cacheWrite: 3 } },
   { model: "claude-sonnet-4-5-20250929", display: "claude-sonnet-4-5", provider: "claude",
-    price: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 } },
+    price: { input: 3, output: 15, cacheRead: 1, cacheWrite: 3 } },
   { model: "claude-haiku-4-5-20251001", display: "claude-haiku-4-5", provider: "claude",
     price: { input: 1, output: 5, cacheRead: 0.1, cacheWrite: 1.25 }, badge: "性价比" },
 ];
 
 // ────────────────────────────────────────────────────────────────
-// OpenAI — 6 个
+// OpenAI — 4 个(thinkai 当前已下架 gpt-5.2 和 gpt-image-2)
 // ────────────────────────────────────────────────────────────────
 
 const GPT: ModelRow[] = [
   { model: "gpt-5.5", display: "gpt-5.5", provider: "gpt",
-    price: { input: 5, output: 30, cacheRead: 0.5, cacheWrite: 5 }, badge: "旗舰" },
+    price: { input: 5, output: 30, cacheRead: 0.5 }, badge: "旗舰" },
   { model: "gpt-5.4", display: "gpt-5.4", provider: "gpt",
-    price: { input: 2.5, output: 15, cacheRead: 0.25, cacheWrite: 2.5 } },
+    price: { input: 2.5, output: 15, cacheRead: 0.25 } },
   { model: "gpt-5.3-codex", display: "gpt-5.3-codex", provider: "gpt",
-    price: { input: 2, output: 16, cacheRead: 0.15, cacheWrite: 1.5 }, badge: "Codex" },
-  { model: "gpt-5.2", display: "gpt-5.2", provider: "gpt",
-    price: { input: 1.75, output: 14, cacheRead: 0.175, cacheWrite: 1.75 } },
+    price: { input: 1.75, output: 14, cacheRead: 0.175 }, badge: "Codex" },
   { model: "gpt-5.4-mini", display: "gpt-5.4-mini", provider: "gpt",
-    price: { input: 0.75, output: 4.5, cacheRead: 0.075, cacheWrite: 0.75 }, badge: "性价比" },
-  { model: "gpt-image-2", display: "gpt-image-2", provider: "gpt",
-    price: { input: 75, output: 150 }, badge: "图像" },
+    price: { input: 0.75, output: 4.5, cacheRead: 0.075 }, badge: "性价比" },
 ];
 
 // ────────────────────────────────────────────────────────────────
-// Google Gemini — 8 个
+// Google Gemini — 5 个(thinkai 当前已下架 -low 变体和 flash-lite)
 // ────────────────────────────────────────────────────────────────
 
 const GEMINI: ModelRow[] = [
   { model: "gemini-3-pro-high", display: "gemini-3-pro-high", provider: "gemini",
-    price: { input: 2, output: 12, cacheRead: 0.2, cacheWrite: 4.5 }, badge: "旗舰" },
-  { model: "gemini-3-pro-low", display: "gemini-3-pro-low", provider: "gemini",
-    price: { input: 2, output: 12, cacheRead: 0.2, cacheWrite: 4.5 } },
+    price: { input: 2, output: 12, cacheRead: 2, cacheWrite: 4.5 }, badge: "旗舰" },
   { model: "gemini-3-pro-preview", display: "gemini-3-pro-preview", provider: "gemini",
-    price: { input: 2, output: 12, cacheRead: 0.2, cacheWrite: 4.5 } },
+    price: { input: 2, output: 12, cacheRead: 2, cacheWrite: 4.5 } },
   { model: "gemini-3.1-pro-high", display: "gemini-3.1-pro-high", provider: "gemini",
-    price: { input: 2, output: 12, cacheRead: 0.2, cacheWrite: 4.5 } },
-  { model: "gemini-3.1-pro-low", display: "gemini-3.1-pro-low", provider: "gemini",
-    price: { input: 2, output: 12, cacheRead: 0.2, cacheWrite: 4.5 } },
+    price: { input: 2, output: 12, cacheRead: 2, cacheWrite: 4.5 } },
   { model: "gemini-3-flash", display: "gemini-3-flash", provider: "gemini",
-    price: { input: 0.5, output: 3, cacheRead: 0.05, cacheWrite: 1 } },
+    price: { input: 2, output: 12, cacheRead: 2, cacheWrite: 4 } },
   { model: "gemini-2.5-flash", display: "gemini-2.5-flash", provider: "gemini",
-    price: { input: 0.3, output: 2.5, cacheRead: 0.03, cacheWrite: 1 } },
-  { model: "gemini-2.5-flash-lite", display: "gemini-2.5-flash-lite", provider: "gemini",
-    price: { input: 0.1, output: 0.4, cacheRead: 0.01, cacheWrite: 1 }, badge: "性价比" },
+    price: { input: 2, output: 12, cacheRead: 2, cacheWrite: 4 }, badge: "性价比" },
 ];
 
 // ────────────────────────────────────────────────────────────────
@@ -128,21 +118,21 @@ export const PROVIDERS: ProviderTab[] = [
     id: "claude",
     name: "Anthropic",
     tabLabel: "Claude",
-    description: "Claude 全系模型,opus / sonnet / haiku 主线。",
+    description: "Claude 全系模型，opus / sonnet / haiku 主线。",
     full: CLAUDE,
   },
   {
     id: "gpt",
     name: "OpenAI",
     tabLabel: "GPT",
-    description: "GPT-5 全系模型，含 codex、mini、图像生成。",
+    description: "GPT-5 全系模型，含 codex、mini。",
     full: GPT,
   },
   {
     id: "gemini",
     name: "Google",
     tabLabel: "Gemini",
-    description: "Gemini 3 系列与 2.5 Flash 系列。",
+    description: "Gemini 3 系列与 2.5 Flash。",
     full: GEMINI,
   },
 ];
