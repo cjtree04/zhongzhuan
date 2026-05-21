@@ -113,10 +113,11 @@ export default function DocsPage() {
 
             <h3 className="mt-8 font-mono text-base font-semibold text-foreground">常见问题</h3>
             <div className="space-y-3 mt-3">
-              <Faq q="Claude 系列模型为什么扣费看起来比标价多?">
-                Claude 系列(opus / sonnet / haiku)是 {GROUP_RATIO.claude}× 倍率:消耗 $1 标价 = 实扣 ${GROUP_RATIO.claude} 美元额度 = ¥{(GROUP_RATIO.claude * TOPUP_RATE).toFixed(2)}。
-                这是因为 Claude 上游号池采购成本更高。GPT / Gemini 全系都是 {GROUP_RATIO.gpt}× 倍率，即标价等于扣费。
-                详见 <a href="/pricing" className="text-brand underline-offset-2 hover:underline">价格表</a>。
+              <Faq q="模型为什么扣费看起来比官方标价多?">
+                每个厂商有不同的「分组倍率」:Claude 系列 {GROUP_RATIO.claude}×、GPT 系列 {GROUP_RATIO.gpt}×、Gemini 系列 {GROUP_RATIO.gemini}×。
+                也就是说调一次 Claude opus,标价 $5 输入,实扣 ${GROUP_RATIO.claude * 5} 美元余额 = ¥{(GROUP_RATIO.claude * 5 * TOPUP_RATE).toFixed(2)};
+                调一次 GPT-5.5 标价 $5,实扣 ${GROUP_RATIO.gpt * 5} 美元 = ¥{(GROUP_RATIO.gpt * 5 * TOPUP_RATE).toFixed(2)}。
+                各 tab 在 <a href="/pricing" className="text-brand underline-offset-2 hover:underline">价格表</a> 底部都有完整公式和举例。
               </Faq>
               <Faq q="账户余额能提现吗?">
                 不支持提现。充值进的是 API 调用余额，只能用于扣费。

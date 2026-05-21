@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import {
   GROUP_RATIO,
   PROVIDERS,
+  TOPUP_RATE,
   formatRmb,
   maxSavings,
   officialRmb,
@@ -128,6 +129,9 @@ export function PricingExplorer() {
                     ))}
                   </div>
                 )}
+
+                {/* 计价公式 + 旗舰举例 */}
+                {p.rows.length > 0 ? <PricingFormula provider={p.id} rows={p.full} /> : null}
               </div>
             </TabsContent>
           );
@@ -169,12 +173,17 @@ function FullRow({ row }: { row: ModelRow }) {
               <Copy className="size-3 text-muted-foreground/60 transition-colors group-hover:text-brand" />
             )}
           </button>
-          {row.provider === "claude" ? (
+          {GROUP_RATIO[row.provider] > 1 ? (
             <span
-              className="border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-amber-700 dark:text-amber-400"
-              title={`Claude 系列倍率 ${GROUP_RATIO.claude}×:消耗 $1 标价时扣 $${GROUP_RATIO.claude} 美元余额`}
+              className={cn(
+                "border px-1.5 py-0.5 font-mono text-[10px] font-semibold",
+                row.provider === "claude"
+                  ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                  : "border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-400",
+              )}
+              title={`分组倍率 ${GROUP_RATIO[row.provider]}×:消耗 $1 标价时扣 $${GROUP_RATIO[row.provider]} 美元余额`}
             >
-              ×{GROUP_RATIO.claude}
+              ×{GROUP_RATIO[row.provider]}
             </span>
           ) : null}
           {row.badge ? (
@@ -244,6 +253,54 @@ function Cell({
       </div>
       <div className="font-mono text-[10px] text-muted-foreground/70 line-through">
         官方 {formatRmb(officialRmb(usd))}
+      </div>
+    </div>
+  );
+}
+
+function PricingFormula({
+  provider,
+  rows,
+}: {
+  provider: Provider;
+  rows: ModelRow[];
+}) {
+  const ratio = GROUP_RATIO[provider];
+  // 找该 tab 的旗舰模型(优先 badge="旗舰",fallback 第一行)
+  const flagship = rows.find((r) => r.badge === "旗舰") ?? rows[0];
+  if (!flagship) return null;
+
+  const officialUsd = flagship.price.input;
+  const ourCny = ourRmb(officialUsd, provider);
+
+  return (
+    <div className="border-t border-border bg-secondary/30 px-6 py-4 font-mono text-xs leading-relaxed text-muted-foreground md:text-[13px]">
+      <div className="mb-2 text-[10px] uppercase tracking-wider text-foreground">
+        计价公式
+      </div>
+      <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
+        <span>实际人民币 = 官方美元价 ×</span>
+        <span className="text-foreground">{TOPUP_RATE}</span>
+        <span>(充值比例) ×</span>
+        <span className="text-brand">{ratio}</span>
+        <span>(分组倍率)</span>
+      </div>
+
+      <div className="mt-3 border-l-2 border-brand/40 pl-3">
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          举例 · {flagship.display}(输入)
+        </div>
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-1.5 text-foreground">
+          <span className="text-muted-foreground">${officialUsd}</span>
+          <span className="text-muted-foreground/60">×</span>
+          <span className="text-muted-foreground">{TOPUP_RATE}</span>
+          <span className="text-muted-foreground/60">×</span>
+          <span className="text-muted-foreground">{ratio}</span>
+          <span className="text-muted-foreground/60">=</span>
+          <span className="font-semibold text-brand">
+            {formatRmb(ourCny)} / 1M tokens
+          </span>
+        </div>
       </div>
     </div>
   );

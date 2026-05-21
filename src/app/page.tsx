@@ -25,16 +25,16 @@ const FAQ = [
     a: "Zhongzhuan Token 是一个面向开发者的海外大模型 API 中转网关。你只需要一个 API Key，就能调用 Claude、GPT-5 等海外最先进的大模型，按 token 用量结算，国内直连。",
   },
   {
-    q: "和直接调用 Claude / OpenAI 官方有什么区别?",
-    a: "1) 一个 Key 同时调两家，无需分别注册账号、绑外币卡；2) 国内多线路直连，延迟更低；3) 不踩区域封号雷；4) 完整 OpenAI 兼容协议 + Anthropic 原生协议双通道，现有代码改一行 base_url 即可。",
+    q: "和直接调用 Claude / GPT / Gemini 官方有什么区别?",
+    a: "1) 一个 Key 同时调三家(Anthropic、OpenAI、Google)，无需分别注册账号、绑外币卡；2) 国内多线路直连，延迟更低；3) 不踩区域封号雷；4) 完整 OpenAI 兼容协议 + Anthropic 原生协议双通道，Gemini 走原生 endpoint，现有代码改一行 base_url 即可。",
   },
   {
     q: "支持哪些客户端 / Agent?",
-    a: "Claude Code、Codex CLI、OpenClaw、Hermes 这些主流 agent 都给了一键脚本和环境变量配置，SDK 层面 openai-python / openai-node / @anthropic-ai/sdk 全兼容。详见 /docs。",
+    a: "Claude Code、Codex CLI、OpenClaw、Hermes 这些主流 agent 都给了一键脚本和环境变量配置，SDK 层面 openai-python / openai-node / @anthropic-ai/sdk / @google/genai 全兼容。详见 /docs。",
   },
   {
     q: "如何计费?有最低充值门槛吗?",
-    a: "按实际 token 用量结算，人民币充值，余额不过期，不强制订阅。最低 ¥10 起，缓存读取价独立按更低单价计算。",
+    a: "按实际 token 用量结算，余额永不过期，不强制订阅。最低充值 $10 美元额度(约 ¥4.2)，缓存读取价独立按更低单价计算。",
   },
   {
     q: "稳定性如何?出问题怎么联系?",
