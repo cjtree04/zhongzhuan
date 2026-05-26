@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
   TOPUP_RATE,
-  USD_TO_CNY,
   formatRmb,
   officialRmb,
   type GroupTone,
@@ -205,7 +204,12 @@ export function PricingExplorer({ views }: { views: TabView[] }) {
 
                     <div className="divide-y divide-border">
                       {b.rows.map((row) => (
-                        <Row key={row.model.model_name} row={row} tone={v.tone} />
+                        <Row
+                          key={row.model.model_name}
+                          row={row}
+                          tone={v.tone}
+                          savings={v.savings}
+                        />
                       ))}
                     </div>
                   </div>
@@ -242,7 +246,15 @@ function MaintenanceBlock({ label }: { label: string }) {
   );
 }
 
-function Row({ row, tone }: { row: PricedRow; tone: GroupTone }) {
+function Row({
+  row,
+  tone,
+  savings,
+}: {
+  row: PricedRow;
+  tone: GroupTone;
+  savings: number;
+}) {
   const [copied, setCopied] = useState(false);
 
   async function copyModelName() {
@@ -255,12 +267,6 @@ function Row({ row, tone }: { row: PricedRow; tone: GroupTone }) {
       toast.error("复制失败，请手动选中文本");
     }
   }
-
-  // 行级节省(按用户实际 USD vs 官方按 USD_TO_CNY 折算)
-  const rowSavings = Math.max(
-    0,
-    Math.round((1 - row.user.input / (row.official.input * USD_TO_CNY)) * 100),
-  );
 
   return (
     <div className="grid grid-cols-2 items-center gap-3 px-6 py-4 transition-colors hover:bg-secondary/30 md:grid-cols-[1.6fr_repeat(4,1fr)_auto] md:gap-4">
@@ -310,7 +316,7 @@ function Row({ row, tone }: { row: PricedRow; tone: GroupTone }) {
 
       <div className="col-span-2 mt-2 md:col-span-1 md:mt-0 md:text-right">
         <span className="inline-flex items-center border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-mono text-xs text-emerald-700 dark:text-emerald-400">
-          {rowSavings}%
+          {savings}%
         </span>
       </div>
     </div>
