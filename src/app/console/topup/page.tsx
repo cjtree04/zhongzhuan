@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/use-auth";
 
 import { formatRmbHint, formatUsd } from "@/lib/format-quota";
-import { GROUP_RATIO, TOPUP_RATE } from "@/lib/pricing";
+import { TOPUP_RATE } from "@/lib/pricing";
 
 /** 充值快捷金额(USD,固定 5 档)
  * 注意:整个 topup 页面的 `amount` state 是「美元」单位,
@@ -248,8 +248,8 @@ export default function TopUpPage() {
               </span>
             </div>
             <div className="font-mono text-xs leading-relaxed text-muted-foreground md:text-sm">
-              充 ¥{(TOPUP_RATE * 100).toFixed(0)} 得 $100 美元额度，按厂商官方价 × 分组倍率扣费
-              (Claude {GROUP_RATIO.claude}×、GPT {GROUP_RATIO.gpt}×、Gemini {GROUP_RATIO.gemini}×)。
+              充 ¥{(TOPUP_RATE * 100).toFixed(0)} 得 $100 美元额度，按厂商官方价 × 分组倍率扣费。
+              不同分组倍率不同，详见 <a href="/pricing" className="text-brand underline-offset-2 hover:underline">价格表</a>。
               余额永不过期，按需充值。
             </div>
           </div>

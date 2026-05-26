@@ -1,7 +1,7 @@
 import { CodeBlock } from "@/components/code-block";
 import { DocsSidebar } from "@/components/docs-sidebar";
 import { Endpoint } from "@/components/docs-endpoint";
-import { GROUP_RATIO, TOPUP_RATE } from "@/lib/pricing";
+import { TOPUP_RATE } from "@/lib/pricing";
 
 export const metadata = {
   title: "接入文档 — Zhongzhuan Token",
@@ -50,7 +50,7 @@ export default function DocsPage() {
               填进验证码后点注册，几秒后跳转到控制台。
             </p>
             <p className="text-sm text-muted-foreground">
-              没收到?检查垃圾邮件;或换一个常用邮箱重试。我们通过 Resend 发送，送达率 99%+。
+              没收到?检查垃圾邮件;或换一个常用邮箱重试。
             </p>
 
             <Step n={2} title="充值余额" />
@@ -72,16 +72,67 @@ export default function DocsPage() {
             <Step n={3} title="创建 API Token" />
             <p>
               控制台点「令牌管理」(<a href="/console/token" className="text-brand underline-offset-2 hover:underline">/console/token</a>),
-              点「新建 Token」,填:
+              点「新建 Token」。每个 token 必须绑定一个「<strong>分组通道</strong>」,
+              决定了它能调哪些模型、按什么倍率扣费。
             </p>
+
+            <div className="border border-brand/30 bg-brand/5 p-4">
+              <div className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-brand">
+                关于分组通道
+              </div>
+              <p className="text-sm leading-relaxed text-foreground">
+                同一个模型(尤其是 Claude)在不同分组下走不同的上游通道，倍率、稳定性、可用性都不一样。
+                我们目前提供 4 个分组，按需挑一个绑给 token:
+              </p>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <GroupCard
+                  name="GPT / Gemini"
+                  ratio="×2"
+                  tone="sky"
+                  tag="官方直连"
+                  desc="OpenAI 与 Google 全系，所有 GPT / Gemini token 都用这个。"
+                />
+                <GroupCard
+                  name="Claude Lite"
+                  ratio="×0.8"
+                  tone="brand"
+                  tag="第三方渠道，性价比之选"
+                  desc="Claude 倍率低于 1，单价比官方 USD 还便宜，预算敏感场景首选。"
+                  highlight
+                />
+                <GroupCard
+                  name="Claude Plus"
+                  ratio="×1.8"
+                  tone="amber"
+                  tag="AWS 逆向号池"
+                  desc="Claude 全系含 Haiku，稳定性优先，适合中长期生产使用。"
+                />
+                <GroupCard
+                  name="Claude Max"
+                  ratio="×3"
+                  tone="amber"
+                  tag="官方满血 Max 直连"
+                  desc="Claude 官方直连通道，倍率最高，可用性最好。"
+                />
+              </div>
+
+              <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+                同一账号可创建多个 token 分别绑不同分组，按项目和用途隔离。
+                完整模型清单和实时倍率见 <a href="/pricing" className="text-brand underline-offset-2 hover:underline">价格表</a>。
+              </p>
+            </div>
+
+            <p>填以下字段:</p>
             <ul className="ml-4 list-disc space-y-1.5 text-sm">
               <li><strong>名称</strong>:给 token 取个标识，比如 <Inline>claude-code-mac</Inline></li>
+              <li><strong>分组</strong>:按上面说明挑一个。调 GPT/Gemini 选 GPT/Gemini;调 Claude 按预算/稳定性挑 Lite / Plus / Max</li>
               <li><strong>额度</strong>:这个 token 最多能用多少美元。建议设 $20-50 限额，避免单个 token 泄露损失太大</li>
               <li><strong>过期时间</strong>:可选「永不过期」或具体天数</li>
             </ul>
             <p>
-              创建后**立即复制并保存** API Key — 出于安全考虑，后续只能看到 masked 版本。
-              如果丢了就重新创建一个,Key 形如 <Inline>sk-xxxxxxxxxxxx</Inline>。
+              创建后<strong>立即复制并保存</strong> API Key — 出于安全考虑，后续只能看到 masked 版本。
+              如果丢了就重新创建一个，Key 形如 <Inline>sk-xxxxxxxxxxxx</Inline>。
             </p>
 
             <Step n={4} title="对接 SDK / Agent" />
@@ -114,10 +165,10 @@ export default function DocsPage() {
             <h3 className="mt-8 font-mono text-base font-semibold text-foreground">常见问题</h3>
             <div className="space-y-3 mt-3">
               <Faq q="模型为什么扣费看起来比官方标价多?">
-                每个厂商有不同的「分组倍率」:Claude 系列 {GROUP_RATIO.claude}×、GPT 系列 {GROUP_RATIO.gpt}×、Gemini 系列 {GROUP_RATIO.gemini}×。
-                也就是说调一次 Claude opus,标价 $5 输入,实扣 ${GROUP_RATIO.claude * 5} 美元余额 = ¥{(GROUP_RATIO.claude * 5 * TOPUP_RATE).toFixed(2)};
-                调一次 GPT-5.5 标价 $5,实扣 ${GROUP_RATIO.gpt * 5} 美元 = ¥{(GROUP_RATIO.gpt * 5 * TOPUP_RATE).toFixed(2)}。
-                各 tab 在 <a href="/pricing" className="text-brand underline-offset-2 hover:underline">价格表</a> 底部都有完整公式和举例。
+                每个 token 绑定一个「分组通道」，每个分组有独立倍率。
+                实扣美元 = 官方美元标价 × 分组倍率，再按 ¥{TOPUP_RATE}/$1 折算成人民币。
+                同一模型在不同分组下倍率不同，可在创建 token 时选择;
+                各分组的完整倍率和示例见 <a href="/pricing" className="text-brand underline-offset-2 hover:underline">价格表</a>。
               </Faq>
               <Faq q="账户余额能提现吗?">
                 不支持提现。充值进的是 API 调用余额，只能用于扣费。
@@ -389,7 +440,7 @@ curl ${BASE}/v1/messages \\
               确认 base_url 是否带 <Inline>/v1</Inline>。OpenAI 协议要带，Anthropic 原生协议不带。
             </Faq>
             <Faq q="返回 429 / Rate limit">
-              切到 vip 分组，或联系客服调整速率上限。
+              换一个更高倍率的分组通道(Claude 系列可从 Lite → Plus → Max)，或联系客服调整速率上限。
             </Faq>
             <Faq q="Claude Code 黄字警告 / 异常退出">
               确认设置了 <Inline>CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1</Inline>，
@@ -457,6 +508,60 @@ function Placeholder({ children }: { children: React.ReactNode }) {
   return (
     <div className="border border-dashed border-border bg-secondary/30 p-6 font-mono text-sm text-muted-foreground">
       {children}
+    </div>
+  );
+}
+
+function GroupCard({
+  name,
+  ratio,
+  tone,
+  tag,
+  desc,
+  highlight,
+}: {
+  name: string;
+  ratio: string;
+  tone: "brand" | "amber" | "sky";
+  tag: string;
+  desc: string;
+  highlight?: boolean;
+}) {
+  const ratioClass =
+    tone === "brand"
+      ? "border-brand/40 bg-brand/10 text-brand"
+      : tone === "amber"
+        ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+        : "border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-400";
+
+  return (
+    <div
+      className={
+        "border border-border bg-background p-3 " +
+        (highlight ? "ring-1 ring-brand/40" : "")
+      }
+    >
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-sm font-semibold text-foreground">
+          {name}
+        </span>
+        <span
+          className={`border px-1.5 py-0.5 font-mono text-[10px] font-semibold ${ratioClass}`}
+        >
+          {ratio}
+        </span>
+        {highlight ? (
+          <span className="border border-brand/40 bg-brand/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-brand">
+            最划算
+          </span>
+        ) : null}
+      </div>
+      <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        {tag}
+      </div>
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+        {desc}
+      </p>
     </div>
   );
 }

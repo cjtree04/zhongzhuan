@@ -43,8 +43,19 @@ import {
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/use-auth";
+import { groupLabel, type PricingPayload } from "@/lib/pricing";
 
 import { DEFAULT_QUOTA_PER_UNIT, formatRmbHint, formatUsd } from "@/lib/format-quota";
+
+/** 从 PricingPayload 算出默认分组:有 "默认分组" 标记的优先,否则第一个 */
+function defaultGroupName(pricing: PricingPayload | null): string {
+  if (!pricing) return "";
+  const marked = Object.entries(pricing.usable_group).find(
+    ([, desc]) => desc === "默认分组",
+  );
+  if (marked) return marked[0];
+  return Object.keys(pricing.group_ratio)[0] ?? "";
+}
 
 /** USD 数字 → quota int(创建/编辑 token 时输入额度用) */
 function usdToQuota(usd: number, status: SiteStatus | null): number {
@@ -68,6 +79,7 @@ const EXPIRY_PRESETS = [
 export default function TokenPage() {
   const { user, loading: authLoading } = useAuth();
   const [status, setStatus] = useState<SiteStatus | null>(null);
+  const [pricing, setPricing] = useState<PricingPayload | null>(null);
 
   const [tokens, setTokens] = useState<TokenRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -99,6 +111,7 @@ export default function TokenPage() {
 
   useEffect(() => {
     api.status().then((r) => r.success && r.data && setStatus(r.data));
+    api.pricing().then((p) => p && setPricing(p));
   }, []);
 
   const fetchTokens = useCallback(async () => {
@@ -189,9 +202,10 @@ export default function TokenPage() {
         {/* Table */}
         <div className="border border-border bg-background">
           {/* Column header (desktop) */}
-          <div className="hidden grid-cols-[2fr_1.3fr_1fr_1fr_1fr_auto] items-center gap-4 border-b border-border bg-secondary/40 px-6 py-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground md:grid">
+          <div className="hidden grid-cols-[1.8fr_1.2fr_1.1fr_0.8fr_0.9fr_0.9fr_auto] items-center gap-4 border-b border-border bg-secondary/40 px-6 py-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground md:grid">
             <div>名称 / Key</div>
             <div>余额 / 已用</div>
+            <div>分组</div>
             <div>状态</div>
             <div>创建时间</div>
             <div>过期时间</div>
@@ -229,6 +243,7 @@ export default function TokenPage() {
                   key={tok.id}
                   token={tok}
                   status={status}
+                  pricing={pricing}
                   onReveal={async () => {
                     const r = await api.tokenGetKey(tok.id);
                     if (r.success && r.data?.key) {
@@ -295,6 +310,7 @@ export default function TokenPage() {
         onOpenChange={setDialogOpen}
         editing={editing}
         status={status}
+        pricing={pricing}
         onSaved={() => {
           setDialogOpen(false);
           setEditing(null);
@@ -330,6 +346,7 @@ export default function TokenPage() {
 function TokenItem({
   token,
   status,
+  pricing,
   onReveal,
   onEdit,
   onToggle,
@@ -337,17 +354,24 @@ function TokenItem({
 }: {
   token: TokenRow;
   status: SiteStatus | null;
+  pricing: PricingPayload | null;
   onReveal: () => void;
   onEdit: () => void;
   onToggle: () => void;
   onDelete: () => void;
 }) {
   const enabled = token.status === 1;
+  // 取分组的显示名 + 倍率(用于行内徽章)
+  const groupName = token.group?.trim();
+  const groupRatio =
+    groupName && pricing ? pricing.group_ratio[groupName] : undefined;
+  const displayedGroup = groupName ? groupLabel(groupName) : null;
+
   return (
-    <div className="grid grid-cols-2 items-center gap-3 px-6 py-4 transition-colors hover:bg-secondary/30 md:grid-cols-[2fr_1.3fr_1fr_1fr_1fr_auto] md:gap-4">
+    <div className="grid grid-cols-2 items-center gap-3 px-6 py-4 transition-colors hover:bg-secondary/30 md:grid-cols-[1.8fr_1.2fr_1.1fr_0.8fr_0.9fr_0.9fr_auto] md:gap-4">
       {/* 名称 / key */}
       <div className="col-span-2 min-w-0 md:col-span-1">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="truncate font-mono text-sm font-medium text-foreground">
             {token.name || `Token #${token.id}`}
           </span>
@@ -378,6 +402,30 @@ function TokenItem({
         <div className="font-mono text-[10px] text-muted-foreground/70">
           已用 {formatUsd(token.used_quota, status)}
         </div>
+      </div>
+
+      {/* 分组 */}
+      <div>
+        <div className="font-mono text-xs text-muted-foreground md:hidden">
+          分组
+        </div>
+        {displayedGroup ? (
+          <>
+            <div
+              className="font-mono text-sm font-medium text-foreground"
+              title={groupName ? `后端分组名:${groupName}` : undefined}
+            >
+              {displayedGroup}
+            </div>
+            {groupRatio !== undefined ? (
+              <div className="font-mono text-[10px] text-muted-foreground">
+                倍率 ×{groupRatio}
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <div className="font-mono text-sm text-muted-foreground">—</div>
+        )}
       </div>
 
       {/* 状态 */}
@@ -455,12 +503,14 @@ function TokenFormDialog({
   onOpenChange,
   editing,
   status,
+  pricing,
   onSaved,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   editing: TokenRow | null;
   status: SiteStatus | null;
+  pricing: PricingPayload | null;
   onSaved: () => void;
 }) {
   const isEdit = !!editing;
@@ -468,8 +518,18 @@ function TokenFormDialog({
   const [unlimited, setUnlimited] = useState(false);
   const [usdQuota, setUsdQuota] = useState<number>(10);
   const [expiryDays, setExpiryDays] = useState<number>(-1);
+  const [group, setGroup] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const groupOptions = useMemo(() => {
+    if (!pricing) return [] as { name: string; ratio: number; label: string }[];
+    return Object.entries(pricing.group_ratio).map(([n, r]) => ({
+      name: n,
+      ratio: r,
+      label: groupLabel(n),
+    }));
+  }, [pricing]);
 
   useEffect(() => {
     if (!open) return;
@@ -491,14 +551,16 @@ function TokenFormDialog({
         const days = Math.max(1, Math.round(secondsLeft / 86400));
         setExpiryDays(days);
       }
+      setGroup(editing.group || defaultGroupName(pricing));
     } else {
       setName("");
       setUnlimited(false);
       setUsdQuota(10);
       setExpiryDays(-1);
+      setGroup(defaultGroupName(pricing));
     }
     setError("");
-  }, [open, editing, status]);
+  }, [open, editing, status, pricing]);
 
   async function submit() {
     setError("");
@@ -522,6 +584,7 @@ function TokenFormDialog({
         remain_quota: remainQuota,
         expired_time: expiredTime,
         status: editing.status,
+        group: group || undefined,
       };
       r = await api.tokenUpdate(payload);
     } else {
@@ -530,6 +593,7 @@ function TokenFormDialog({
         unlimited_quota: unlimited,
         remain_quota: remainQuota,
         expired_time: expiredTime,
+        group: group || undefined,
       };
       r = await api.tokenCreate(payload);
     }
@@ -571,6 +635,39 @@ function TokenFormDialog({
               disabled={saving}
             />
           </div>
+
+          {groupOptions.length > 0 ? (
+            <div className="space-y-2">
+              <Label className="font-mono text-[11px] uppercase tracking-wider">
+                分组
+              </Label>
+              <div className="grid grid-cols-2 gap-1">
+                {groupOptions.map((g) => (
+                  <button
+                    key={g.name}
+                    type="button"
+                    onClick={() => setGroup(g.name)}
+                    className={cn(
+                      "border px-2 py-1.5 text-left font-mono text-xs transition-colors",
+                      group === g.name
+                        ? "border-brand bg-brand/10 text-brand"
+                        : "border-border bg-background text-foreground hover:border-brand/50",
+                    )}
+                    disabled={saving}
+                    title={`${g.name} · ×${g.ratio}`}
+                  >
+                    <span className="block truncate">{g.label}</span>
+                    <span className="block font-mono text-[10px] text-muted-foreground">
+                      ×{g.ratio}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <p className="font-mono text-[10px] leading-relaxed text-muted-foreground">
+                同一模型在不同分组下倍率不同，调用时按 token 绑定的分组扣费。
+              </p>
+            </div>
+          ) : null}
 
           <div className="space-y-2">
             <Label className="font-mono text-[11px] uppercase tracking-wider">

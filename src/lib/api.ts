@@ -17,6 +17,8 @@
  * 这样跳到 /console 时 New API 的 SPA 也能识别。
  */
 
+import type { PricingPayload } from "./pricing";
+
 export type ApiResponse<T = unknown> = {
   success: boolean;
   message: string;
@@ -179,6 +181,26 @@ export const api = {
   /** 站点公开配置(quota_per_unit / usd_exchange_rate / ...) */
   status() {
     return jsonFetch<SiteStatus>("/api/status", { method: "GET" });
+  },
+
+  /**
+   * 模型 + 分组 + 倍率定价(公开,无需认证)。
+   * 响应不走 ApiResponse wrapper,直接返回 PricingPayload。
+   * 失败/格式错时返回 null,调用方自行降级。
+   */
+  async pricing(): Promise<PricingPayload | null> {
+    try {
+      const res = await fetch("/api/pricing", {
+        credentials: "include",
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) return null;
+      const json = (await res.json()) as PricingPayload;
+      if (!json?.success || !Array.isArray(json.data)) return null;
+      return json;
+    } catch {
+      return null;
+    }
   },
 
   /** 当前用户的 API token 列表(分页) */

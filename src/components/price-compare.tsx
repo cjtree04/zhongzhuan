@@ -3,16 +3,31 @@ import { ArrowRight, Boxes, Infinity as InfinityIcon, TrendingDown } from "lucid
 
 import { Button } from "@/components/ui/button";
 import {
-  GROUP_RATIO,
   TOPUP_RATE,
   USD_TO_CNY,
-  savingsPercentFor,
+  cheapestGroup,
+  groupLabel,
+  maxSavingsAcrossGroups,
+  savingsPercentForRatio,
 } from "@/lib/pricing";
+import { fetchPricing } from "@/lib/pricing-server";
 
-export function PriceCompare() {
-  // GPT/Gemini 节省最猛(1x 倍率),用它做大头条
-  const headlineSavings = savingsPercentFor("gpt");
-  const claudeSavings = savingsPercentFor("claude");
+const FALLBACK_SAVINGS = 88;
+
+export async function PriceCompare() {
+  const payload = await fetchPricing();
+  const headlineSavings = payload
+    ? maxSavingsAcrossGroups(payload.group_ratio)
+    : FALLBACK_SAVINGS;
+  const cheapest = payload ? cheapestGroup(payload.group_ratio) : null;
+  const cheapestLabel = cheapest ? groupLabel(cheapest.name) : null;
+  const groupCount = payload ? Object.keys(payload.group_ratio).length : 0;
+  const modelCount = payload?.data.length ?? 0;
+
+  // 第二张卡用"最低倍率组"做卖点;若拿不到数据走 fallback
+  const secondLineSavings = cheapest
+    ? savingsPercentForRatio(cheapest.ratio)
+    : FALLBACK_SAVINGS;
 
   return (
     <section id="pricing" className="scroll-mt-20 border-b border-border">
@@ -51,7 +66,7 @@ export function PriceCompare() {
             <div className="mt-6 max-w-xl text-xs leading-relaxed text-muted-foreground md:text-sm">
               按厂商官方价扣额度，实际成本相比直接走官方({" "}
               <span className="font-mono">¥{USD_TO_CNY}/$1</span>
-              {" "}市场汇率)节省高达{" "}
+              {" "}市场汇率)节省最高{" "}
               <span className="font-mono font-semibold text-brand">{headlineSavings}%</span>。
             </div>
           </div>
@@ -64,9 +79,13 @@ export function PriceCompare() {
             title="官方原生模型"
             desc={
               <>
-                Claude opus 4.7 · GPT-5.5 · Gemini 3 Pro
-                <br />
-                与 thinkai 同步 20+ 主流模型
+                Claude · GPT · Gemini 全系
+                {modelCount > 0 ? (
+                  <>
+                    <br />
+                    后台同步 {modelCount} 个在售模型
+                  </>
+                ) : null}
               </>
             }
           />
@@ -76,8 +95,12 @@ export function PriceCompare() {
             desc={
               <>
                 对比厂商官方价(按 ¥{USD_TO_CNY}/$1 折算)
-                <br />
-                Claude 系列节省 {claudeSavings}%,GPT/Gemini 节省 {headlineSavings}%
+                {cheapestLabel ? (
+                  <>
+                    <br />
+                    {cheapestLabel} 组 ×{cheapest!.ratio} 倍率，节省 {secondLineSavings}%
+                  </>
+                ) : null}
               </>
             }
           />
@@ -116,12 +139,23 @@ export function PriceCompare() {
           />
         </div>
 
-        {/* Small claude ratio footnote (用户原始需求要求标注，但不能显眼) */}
+        {/* Footnote */}
         <div className="mt-10 text-center font-mono text-[10px] text-muted-foreground/60">
-          * Claude 系列倍率 {GROUP_RATIO.claude}×,详见{" "}
-          <Link href="/pricing" className="underline-offset-2 hover:underline hover:text-brand">
-            完整价格表
-          </Link>
+          {groupCount > 0 ? (
+            <>
+              * 共 {groupCount} 个分组通道可选，倍率与节省详见{" "}
+              <Link href="/pricing" className="underline-offset-2 hover:underline hover:text-brand">
+                完整价格表
+              </Link>
+            </>
+          ) : (
+            <>
+              * 倍率与节省详见{" "}
+              <Link href="/pricing" className="underline-offset-2 hover:underline hover:text-brand">
+                完整价格表
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </section>
