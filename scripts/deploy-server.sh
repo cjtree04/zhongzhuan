@@ -26,6 +26,7 @@ APP_PORT="3100"
 NEW_API_PORT="3000"
 NGINX_CONF="/etc/nginx/conf.d/new-api.conf"
 REPO="https://github.com/cjtree04/zhongzhuan.git"
+BRANCH="${BRANCH:-feat/dynamic-pricing}"
 SERVER_NAME="zhongzhuantoken.com"
 
 step() {
@@ -87,9 +88,21 @@ fi
 node --version
 npm --version
 
-# 切到 npmmirror(国内加速)
+# 切到 npmmirror(国内加速,只用于 pm2 等全局工具)
 npm config set registry https://registry.npmmirror.com
 echo "✓ npm registry: $(npm config get registry)"
+
+# ─── 1.5/9 装 bun(锁文件用 bun.lock,本地一致) ───────────────────────────────
+step "[1.5/9] 装 bun"
+if command -v bun >/dev/null 2>&1; then
+  echo "bun 已装: $(bun --version)"
+else
+  curl -fsSL https://bun.sh/install | bash
+  export BUN_INSTALL="$HOME/.bun"
+  export PATH="$BUN_INSTALL/bin:$PATH"
+  ln -sf "$BUN_INSTALL/bin/bun" /usr/local/bin/bun
+  echo "✓ bun $(bun --version)"
+fi
 
 # ─── 2/9 装 pm2 ──────────────────────────────────────────────────────────────
 step "[2/9] 装 pm2"
@@ -104,31 +117,37 @@ fi
 step "[3/9] 拉前端代码到 $APP_DIR"
 mkdir -p "$(dirname $APP_DIR)"
 if [ -d "$APP_DIR/.git" ]; then
-  echo "已有代码,执行 git pull..."
+  echo "已有代码,执行 git fetch + checkout..."
   cd "$APP_DIR"
+  # single-branch clone 兼容:如果之前是 --depth=1 装的,先解锁所有分支
+  git remote set-branches origin '*' 2>/dev/null || true
+  git fetch --all --tags
+  git checkout "$BRANCH"
   git pull --ff-only
 else
   rm -rf "$APP_DIR"
-  git clone --depth=1 "$REPO" "$APP_DIR"
+  # 不再用 --depth=1:换分支会报 pathspec 不存在
+  git clone "$REPO" "$APP_DIR"
   cd "$APP_DIR"
+  git checkout "$BRANCH"
 fi
-echo "✓ 代码就绪 @ $APP_DIR (commit: $(git rev-parse --short HEAD))"
+echo "✓ 代码就绪 @ $APP_DIR · 分支 $BRANCH (commit: $(git rev-parse --short HEAD))"
 
-# ─── 4/9 装依赖 ──────────────────────────────────────────────────────────────
-step "[4/9] 装 npm 依赖(用 npmmirror 加速,1-3 分钟)"
-npm install --no-audit --no-fund
+# ─── 4/9 装依赖(bun · 走 bun.lock 与本地一致) ───────────────────────────────
+step "[4/9] 装依赖(bun install --frozen-lockfile,1-3 分钟)"
+bun install --frozen-lockfile
 echo "✓ 依赖装好"
 
 # ─── 5/9 Production build ────────────────────────────────────────────────────
 step "[5/9] Production build(2-3 分钟)"
-NODE_OPTIONS=--max-old-space-size=2048 npm run build
+NODE_OPTIONS=--max-old-space-size=2048 bun run build
 echo "✓ build 完成"
 
 # ─── 6/9 pm2 启动 ────────────────────────────────────────────────────────────
 step "[6/9] pm2 启动 Next.js 在端口 $APP_PORT"
 pm2 delete zhongzhuan-web 2>/dev/null || true
 cd "$APP_DIR"
-PORT=$APP_PORT pm2 start npm --name zhongzhuan-web -- run start
+PORT=$APP_PORT pm2 start bun --name zhongzhuan-web -- run start
 pm2 save
 echo "✓ pm2 启动完成"
 
