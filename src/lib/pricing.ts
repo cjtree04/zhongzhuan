@@ -4,8 +4,9 @@
  * 架构原则:**后端 = 唯一真相，前端 = 展示皮**
  * ─────────────────────────────────────────────────────
  * 模型/分组/倍率/价格 全部从 New API /api/pricing 公开 endpoint 拉取，
- * 前端只保留 "装饰层"(MODEL_BADGES / TAB_ORDER / VENDOR_DISPLAY)
- * 控制营销表现。后台改什么前台 60 秒内自动跟随，不需要改这份代码。
+ * 前端只保留极薄装饰层(MODEL_BADGES / GROUP_LABELS / VENDOR_DISPLAY)做美化,
+ * tab 顺序、tab 数量、组描述都由后台 group_ratio + usable_group 决定。
+ * 后台加/改/删分组,前台 60 秒内自动跟随,不需要改这份代码。
  *
  * 数据转换:
  * · 每千 token 美元价 = model_ratio × 0.002 (New API 内部用 davinci 旧基准)
@@ -92,80 +93,67 @@ export const MODEL_BADGES: Record<string, Badge> = {
 export type GroupTone = "brand" | "amber" | "sky" | "muted";
 
 /**
- * Tab 配置:一个 tab 绑一个后端分组,可选按 vendor 过滤。
- * "GPT/Gemini" 后端是单一分组,前端拆成 GPT / Gemini 两个 tab 展示。
- * tab 顺序就是数组顺序。
- *
- * 后台加了新组? 前端不会自动出现 tab,必须在这里登记(显式控制营销表现)。
- * 后台从某组里移光所有模型? tab 仍展示,但自动标"维护中"(buildTabViews 里判断)。
+ * 分组名 → 展示名映射(优先级最高)。
+ * 后台命名规范的话不需要登记,这里只兜底处理大小写/排版美化场景。
  */
-export type TabSpec = {
-  id: string;
-  label: string;
-  /** 对应 payload.group_ratio 的 key */
-  group: string;
-  /** 可选:仅展示这些 vendor_id 的模型(用于把 GPT/Gemini 拆成两 tab) */
-  vendorIds?: number[];
-  desc: string;
-  tone: GroupTone;
-  /** hero 区是否高亮(目前用于"最划算"角标) */
-  highlight?: boolean;
-};
+const GROUP_LABELS: Record<string, string> = {};
 
-export const TAB_ORDER: TabSpec[] = [
-  {
-    id: "gpt",
-    label: "GPT",
-    group: "GPT/Gemini",
-    vendorIds: [1],
-    desc: "官方直连",
-    tone: "sky",
-  },
-  {
-    id: "gemini",
-    label: "Gemini",
-    group: "GPT/Gemini",
-    vendorIds: [3],
-    desc: "官方直连",
-    tone: "sky",
-  },
-  {
-    id: "claude-lite",
-    label: "Claude Lite",
-    group: "claude lite",
-    desc: "Claude 第三方渠道，性价比之选",
-    tone: "brand",
-    highlight: true,
-  },
-  {
-    id: "claude-plus",
-    label: "Claude Plus",
-    group: "claude plus",
-    desc: "Claude AWS 逆向号池",
-    tone: "amber",
-  },
-  {
-    id: "claude-max",
-    label: "Claude Max",
-    group: "claude max",
-    desc: "Claude 官方满血 Max 直连",
-    tone: "amber",
-  },
-];
+/** 单词全大写白名单(title case 兜底用) */
+const UPPERCASE_WORDS = new Set([
+  "gpt",
+  "ai",
+  "api",
+  "llm",
+  "ibm",
+  "aws",
+  "vip",
+]);
 
-/**
- * 给 token form / 行展示用的"分组人话名"。
- * 跟 tab label 不同:GPT/Gemini 是一个分组,在 token form 里显示为 "GPT / Gemini"。
- */
-const GROUP_LABELS: Record<string, string> = {
-  "claude lite": "Claude Lite",
-  "claude plus": "Claude Plus",
-  "claude max": "Claude Max",
-  "GPT/Gemini": "GPT / Gemini",
-};
+/** 把分组名做 title case 美化,空格/斜杠/下划线/连字符都视作分词 */
+function titleCaseGroup(name: string): string {
+  return name
+    .split(/[\s/_-]+/)
+    .filter(Boolean)
+    .map((w) =>
+      UPPERCASE_WORDS.has(w.toLowerCase())
+        ? w.toUpperCase()
+        : w[0].toUpperCase() + w.slice(1).toLowerCase(),
+    )
+    .join(" ");
+}
 
+/** tab/行展示用的分组人话名 */
 export function groupLabel(name: string): string {
-  return GROUP_LABELS[name] ?? name;
+  return GROUP_LABELS[name] ?? titleCaseGroup(name) ?? name;
+}
+
+/** 根据组名关键字推断展示色调,新组也能自动有合理样式 */
+function inferGroupTone(name: string): GroupTone {
+  const n = name.toLowerCase();
+  if (n.includes("lite")) return "brand";
+  if (n.includes("claude")) return "amber";
+  if (n.includes("gpt") || n.includes("openai")) return "sky";
+  if (n.includes("gemini") || n.includes("google")) return "sky";
+  if (n.includes("image") || n.includes("draw") || n.includes("vision"))
+    return "amber";
+  return "muted";
+}
+
+/** tab id 用作 React key 和 Tabs value,把组名转成稳定 slug */
+function groupSlug(name: string): string {
+  const s = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return s || `g-${Math.abs(hashCode(name))}`;
+}
+
+function hashCode(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (h * 31 + s.charCodeAt(i)) | 0;
+  }
+  return h;
 }
 
 /** vendor_id 到展示信息(label/icon 名)。后端 vendors 已含 name+icon，这里只做兜底 */
@@ -305,7 +293,7 @@ export type PricedRow = {
 
 /** 按 tab 聚合 + 按 vendor 分块的完整视图,供价格表组件直接渲染 */
 export type TabView = {
-  /** 唯一 id(来自 TabSpec.id) */
+  /** 唯一 id(由后端组名 slug 化得来,仅用作 React key + tab value) */
   id: string;
   /** 显示名 */
   label: string;
@@ -343,30 +331,29 @@ function rowSortKey(r: PricedRow): [number, number, string] {
 }
 
 /**
- * 把 raw payload 按 TAB_ORDER 转成 tab 视图。
+ * 把 raw payload 转成 tab 视图。
  *
  * 规则:
- *  - tab 顺序 = TAB_ORDER 顺序(显式控制)
- *  - 后端不存在该组(group_ratio 里没 key) → 跳过该 tab
- *  - 后端有该组但 0 匹配模型 → tab 仍出现,标 maintenance=true
- *  - vendorIds 过滤:仅展示这些 vendor_id 的模型(用于把 GPT/Gemini 拆成 2 tab)
+ *  - **每个后端 group_ratio 的 key 出一个 tab**,顺序就是后端返回顺序
+ *  - label 用 groupLabel(name) 美化
+ *  - desc 用 payload.usable_group[name](后台维护的组描述)
+ *  - tone 按组名关键字推断,见 inferGroupTone
+ *  - 最低 ratio 的组自动 highlight 为"最划算"(组数 >= 2 时)
+ *  - 该组下没有可用模型 → tab 仍出现,maintenance=true
+ *
+ * 后台想拆分(比如 GPT 和 Gemini 独立)?  后台分别建组就行,前端不做拆分。
  */
 export function buildTabViews(payload: PricingPayload): TabView[] {
   const vendorById = new Map(payload.vendors.map((v) => [v.id, v]));
+  const ratios = Object.values(payload.group_ratio);
+  const minRatio = ratios.length > 0 ? Math.min(...ratios) : Infinity;
   const views: TabView[] = [];
 
-  for (const tab of TAB_ORDER) {
-    const ratio = payload.group_ratio[tab.group];
-    if (ratio === undefined) continue; // 后端没这个组,跳过
+  for (const [groupName, ratio] of Object.entries(payload.group_ratio)) {
+    const candidates = payload.data.filter((m) =>
+      m.enable_groups?.includes(groupName),
+    );
 
-    // 候选模型:在该组里 + 通过 vendor 过滤
-    const candidates = payload.data.filter((m) => {
-      if (!m.enable_groups?.includes(tab.group)) return false;
-      if (tab.vendorIds && !tab.vendorIds.includes(m.vendor_id)) return false;
-      return true;
-    });
-
-    // 按 vendor 分块(候选可能为空 → maintenance)
     const byVendor = new Map<number, PricedRow[]>();
     for (const m of candidates) {
       const v = vendorById.get(m.vendor_id);
@@ -377,7 +364,7 @@ export function buildTabViews(payload: PricingPayload): TabView[] {
         model: m,
         badge: MODEL_BADGES[m.model_name],
         vendor: v,
-        group: tab.group,
+        group: groupName,
         groupRatio: ratio,
         official,
         user,
@@ -410,12 +397,12 @@ export function buildTabViews(payload: PricingPayload): TabView[] {
       .sort((a, b) => a.vendor.id - b.vendor.id);
 
     views.push({
-      id: tab.id,
-      label: tab.label,
-      desc: tab.desc,
-      tone: tab.tone,
-      highlight: tab.highlight,
-      group: tab.group,
+      id: groupSlug(groupName),
+      label: groupLabel(groupName),
+      desc: payload.usable_group?.[groupName] ?? "",
+      tone: inferGroupTone(groupName),
+      highlight: ratios.length >= 2 && ratio === minRatio,
+      group: groupName,
       ratio,
       blocks,
       savings: savingsPercentForRatio(ratio),

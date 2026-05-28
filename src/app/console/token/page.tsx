@@ -366,6 +366,10 @@ function TokenItem({
   const groupRatio =
     groupName && pricing ? pricing.group_ratio[groupName] : undefined;
   const displayedGroup = groupName ? groupLabel(groupName) : null;
+  const modelLimitCount =
+    token.model_limits_enabled && token.model_limits
+      ? token.model_limits.split(",").filter((s) => s.trim()).length
+      : 0;
 
   return (
     <div className="grid grid-cols-2 items-center gap-3 px-6 py-4 transition-colors hover:bg-secondary/30 md:grid-cols-[1.8fr_1.2fr_1.1fr_0.8fr_0.9fr_0.9fr_auto] md:gap-4">
@@ -420,6 +424,14 @@ function TokenItem({
             {groupRatio !== undefined ? (
               <div className="font-mono text-[10px] text-muted-foreground">
                 倍率 ×{groupRatio}
+              </div>
+            ) : null}
+            {token.model_limits_enabled ? (
+              <div
+                className="mt-0.5 font-mono text-[10px] text-amber-600 dark:text-amber-500"
+                title={token.model_limits || ""}
+              >
+                限 {modelLimitCount} 个模型
               </div>
             ) : null}
           </>
@@ -519,6 +531,9 @@ function TokenFormDialog({
   const [usdQuota, setUsdQuota] = useState<number>(10);
   const [expiryDays, setExpiryDays] = useState<number>(-1);
   const [group, setGroup] = useState<string>("");
+  const [limitModels, setLimitModels] = useState(false);
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
+  const [modelSearch, setModelSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -530,6 +545,23 @@ function TokenFormDialog({
       label: groupLabel(n),
     }));
   }, [pricing]);
+
+  // 当前 group 下的可选模型(去重),用于"限制模型"chip 列表
+  const groupModels = useMemo(() => {
+    if (!pricing || !group) return [] as string[];
+    const set = new Set<string>();
+    for (const m of pricing.data) {
+      if (m.enable_groups?.includes(group)) set.add(m.model_name);
+    }
+    return Array.from(set).sort();
+  }, [pricing, group]);
+
+  // 搜索过滤后的可选模型(只用于渲染)
+  const visibleModels = useMemo(() => {
+    const q = modelSearch.trim().toLowerCase();
+    if (!q) return groupModels;
+    return groupModels.filter((m) => m.toLowerCase().includes(q));
+  }, [groupModels, modelSearch]);
 
   useEffect(() => {
     if (!open) return;
@@ -552,13 +584,22 @@ function TokenFormDialog({
         setExpiryDays(days);
       }
       setGroup(editing.group || defaultGroupName(pricing));
+      setLimitModels(!!editing.model_limits_enabled);
+      setSelectedModels(
+        editing.model_limits
+          ? editing.model_limits.split(",").map((s) => s.trim()).filter(Boolean)
+          : [],
+      );
     } else {
       setName("");
       setUnlimited(false);
       setUsdQuota(10);
       setExpiryDays(-1);
       setGroup(defaultGroupName(pricing));
+      setLimitModels(false);
+      setSelectedModels([]);
     }
+    setModelSearch("");
     setError("");
   }, [open, editing, status, pricing]);
 
@@ -568,12 +609,19 @@ function TokenFormDialog({
       setError("请填写名称");
       return;
     }
+    // 限制模式开启但一个都没选 = 等于全禁,先拦下来
+    if (limitModels && selectedModels.length === 0) {
+      setError("已开启模型限制但未选择任何模型,该 Token 将无法调用任何模型");
+      return;
+    }
     setSaving(true);
     const remainQuota = unlimited ? 0 : usdToQuota(usdQuota, status);
     const expiredTime =
       expiryDays < 0
         ? -1
         : Math.floor(Date.now() / 1000) + expiryDays * 86400;
+    // 限制关闭时不传 model_limits,后端按 unlimited 走
+    const modelLimitsStr = limitModels ? selectedModels.join(",") : "";
 
     let r;
     if (isEdit && editing) {
@@ -585,6 +633,8 @@ function TokenFormDialog({
         expired_time: expiredTime,
         status: editing.status,
         group: group || undefined,
+        model_limits_enabled: limitModels,
+        model_limits: modelLimitsStr,
       };
       r = await api.tokenUpdate(payload);
     } else {
@@ -594,6 +644,8 @@ function TokenFormDialog({
         remain_quota: remainQuota,
         expired_time: expiredTime,
         group: group || undefined,
+        model_limits_enabled: limitModels,
+        model_limits: modelLimitsStr,
       };
       r = await api.tokenCreate(payload);
     }
@@ -707,6 +759,97 @@ function TokenFormDialog({
               </div>
             ) : null}
           </div>
+
+          {groupModels.length > 0 ? (
+            <div className="space-y-2">
+              <Label className="font-mono text-[11px] uppercase tracking-wider">
+                可用模型
+              </Label>
+              <label className="flex cursor-pointer items-center gap-1.5 font-mono text-xs">
+                <input
+                  type="checkbox"
+                  checked={limitModels}
+                  onChange={(e) => setLimitModels(e.target.checked)}
+                  disabled={saving}
+                />
+                限制此 Token 可调用的模型(白名单)
+              </label>
+              {limitModels ? (
+                <div className="space-y-2 border border-border bg-secondary/30 p-2.5">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={modelSearch}
+                      onChange={(e) => setModelSearch(e.target.value)}
+                      placeholder={`搜索模型(共 ${groupModels.length} 个)`}
+                      className="h-8 font-mono text-xs"
+                      disabled={saving}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 shrink-0 font-mono text-xs"
+                      onClick={() =>
+                        setSelectedModels(
+                          selectedModels.length === groupModels.length
+                            ? []
+                            : [...groupModels],
+                        )
+                      }
+                      disabled={saving}
+                    >
+                      {selectedModels.length === groupModels.length
+                        ? "清空"
+                        : "全选"}
+                    </Button>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto">
+                    <div className="flex flex-wrap gap-1">
+                      {visibleModels.length === 0 ? (
+                        <span className="px-1 py-2 font-mono text-[11px] text-muted-foreground">
+                          没有匹配的模型
+                        </span>
+                      ) : (
+                        visibleModels.map((m) => {
+                          const on = selectedModels.includes(m);
+                          return (
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() =>
+                                setSelectedModels((prev) =>
+                                  on
+                                    ? prev.filter((x) => x !== m)
+                                    : [...prev, m],
+                                )
+                              }
+                              disabled={saving}
+                              className={cn(
+                                "border px-2 py-1 font-mono text-[11px] transition-colors",
+                                on
+                                  ? "border-brand bg-brand/10 text-brand"
+                                  : "border-border bg-background text-foreground hover:border-brand/50",
+                              )}
+                            >
+                              {m}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                  <p className="font-mono text-[10px] leading-relaxed text-muted-foreground">
+                    已选 {selectedModels.length} / {groupModels.length} ·
+                    切换分组后,该分组以外的模型仍保留在列表里(仅展示当前分组)。
+                  </p>
+                </div>
+              ) : (
+                <p className="font-mono text-[10px] leading-relaxed text-muted-foreground">
+                  不限制 = 该分组下所有模型都能用,后续后台上新会自动生效。
+                </p>
+              )}
+            </div>
+          ) : null}
 
           <div className="space-y-2">
             <Label className="font-mono text-[11px] uppercase tracking-wider">

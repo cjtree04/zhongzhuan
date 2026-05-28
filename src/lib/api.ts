@@ -522,6 +522,10 @@ export type TokenRow = {
   unlimited_quota: boolean;
   used_quota: number;
   group: string;
+  /** 白名单语义:打开后只有 model_limits 里的模型可调,留空则禁全部 */
+  model_limits_enabled?: boolean;
+  /** 逗号分隔的模型名,如 "claude-opus-4-7,gpt-5.5" */
+  model_limits?: string;
 };
 
 export type Paginated<T> = {
