@@ -98,6 +98,26 @@ export type GroupTone = "brand" | "amber" | "sky" | "muted";
  */
 const GROUP_LABELS: Record<string, string> = {};
 
+/**
+ * Tab 排序权重表。登记过的组按此顺序排,未登记的组按 group_ratio 自然顺序排在后面。
+ * 后台加新组前端会自动出 tab,但默认排在后面;想要它排到前面,在这里加一行即可。
+ * 不区分大小写。
+ */
+const GROUP_ORDER: string[] = [
+  "claude lite",
+  "claude max",
+  "GPT",
+  "image 2",
+  "gemini",
+];
+
+/** 取某组在 GROUP_ORDER 里的排序索引;不在表里返回 Infinity(排到最后) */
+function groupOrderIndex(name: string): number {
+  const lower = name.toLowerCase();
+  const i = GROUP_ORDER.findIndex((g) => g.toLowerCase() === lower);
+  return i < 0 ? Infinity : i;
+}
+
 /** 单词全大写白名单(title case 兜底用) */
 const UPPERCASE_WORDS = new Set([
   "gpt",
@@ -410,6 +430,15 @@ export function buildTabViews(payload: PricingPayload): TabView[] {
       maintenance: candidates.length === 0,
     });
   }
+
+  // 按 GROUP_ORDER 排序,登记过的在前(按权重),未登记的按后端原顺序排在后面
+  const originalOrder = new Map(views.map((v, i) => [v.group, i]));
+  views.sort((a, b) => {
+    const ia = groupOrderIndex(a.group);
+    const ib = groupOrderIndex(b.group);
+    if (ia !== ib) return ia - ib;
+    return (originalOrder.get(a.group) ?? 0) - (originalOrder.get(b.group) ?? 0);
+  });
 
   return views;
 }
