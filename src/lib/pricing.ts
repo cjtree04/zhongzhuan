@@ -80,9 +80,8 @@ export type Badge = "旗舰" | "性价比" | "Codex";
 
 /** 模型徽章。后台加新模型时若想给它加徽章，在这里加一行 */
 export const MODEL_BADGES: Record<string, Badge> = {
-  "claude-opus-4-7": "旗舰",
-  "claude-sonnet-4-6": "旗舰",
-  "claude-haiku-4-5-20251001": "性价比",
+  "claude-opus-4-8": "旗舰",
+  "claude-sonnet-4-6": "性价比",
   "gpt-5.5": "旗舰",
   "gpt-5.4-mini": "性价比",
   "gpt-5.3-codex": "Codex",
@@ -231,6 +230,11 @@ export function userRmb(officialUsd: number, groupRatio: number): number {
   return officialUsd * groupRatio * TOPUP_RATE;
 }
 
+/** 按次计费:用户每次实际人民币 = 单次基价 × group_ratio × 充值比例 */
+export function perUseRmb(modelPrice: number, groupRatio: number): number {
+  return modelPrice * groupRatio * TOPUP_RATE;
+}
+
 /** 单个 group_ratio 对应的节省比例 */
 export function savingsPercentForRatio(groupRatio: number): number {
   return Math.max(
@@ -309,6 +313,13 @@ export type PricedRow = {
   user: Price;
   /** 用户实际人民币单价(per 1M tokens，输入/输出/缓存读/缓存写各自) */
   userRmb: Price;
+  /** 按次计费(model_price > 0)时填充，token 计费为 undefined */
+  perUse?: {
+    /** 单次基价(美元，后端 model_price) */
+    usdPerCall: number;
+    /** 用户每次实际人民币 */
+    rmbPerCall: number;
+  };
 };
 
 /** 按 tab 聚合 + 按 vendor 分块的完整视图,供价格表组件直接渲染 */
@@ -336,6 +347,8 @@ export type TabView = {
   totalModels: number;
   /** 维护中:后端有该组但没有匹配模型(可能在配置或维护) */
   maintenance: boolean;
+  /** 整组按次计费(全部模型 model_price > 0):走"每次价格"展示，不与原厂对照 */
+  perUse: boolean;
 };
 
 /** Badge 排序:旗舰 > 性价比/Codex > 无 */
@@ -388,6 +401,13 @@ export function buildTabViews(payload: PricingPayload): TabView[] {
         groupRatio: ratio,
         official,
         user,
+        perUse:
+          m.model_price > 0
+            ? {
+                usdPerCall: m.model_price,
+                rmbPerCall: perUseRmb(m.model_price, ratio),
+              }
+            : undefined,
         userRmb: {
           input: user.input * TOPUP_RATE,
           output: user.output * TOPUP_RATE,
@@ -428,6 +448,8 @@ export function buildTabViews(payload: PricingPayload): TabView[] {
       savings: savingsPercentForRatio(ratio),
       totalModels: candidates.length,
       maintenance: candidates.length === 0,
+      perUse:
+        candidates.length > 0 && candidates.every((m) => m.model_price > 0),
     });
   }
 

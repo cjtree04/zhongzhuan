@@ -94,7 +94,7 @@ export function PricingExplorer({ views }: { views: TabView[] }) {
           />
         </div>
         <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-          单位:人民币 / 1M tokens
+          单位:人民币 / 1M tokens(图像类按次计费)
         </div>
       </div>
 
@@ -165,10 +165,15 @@ export function PricingExplorer({ views }: { views: TabView[] }) {
                     </p>
                   ) : null}
                 </div>
-                {!v.maintenance && v.savings > 0 ? (
+                {!v.maintenance && !v.perUse && v.savings > 0 ? (
                   <div className="inline-flex items-center gap-2 border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 font-mono text-xs text-emerald-700 dark:text-emerald-400">
                     <span className="size-1.5 rounded-full bg-emerald-500" />
                     最低 {100 - v.savings}% 官方价
+                  </div>
+                ) : v.perUse ? (
+                  <div className="inline-flex items-center gap-2 border border-amber-500/30 bg-amber-500/10 px-3 py-1 font-mono text-xs text-amber-700 dark:text-amber-400">
+                    <span className="size-1.5 rounded-full bg-amber-500" />
+                    按次计费
                   </div>
                 ) : null}
               </div>
@@ -193,24 +198,39 @@ export function PricingExplorer({ views }: { views: TabView[] }) {
                     </div>
 
                     {/* 列 header(桌面) */}
-                    <div className="hidden grid-cols-[1.6fr_repeat(4,1fr)_auto] items-center gap-4 border-b border-border bg-secondary/20 px-6 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground md:grid">
-                      <div>模型</div>
-                      <div>输入</div>
-                      <div>输出</div>
-                      <div>缓存读取</div>
-                      <div>缓存写入</div>
-                      <div className="text-right">节省</div>
-                    </div>
+                    {v.perUse ? (
+                      <div className="hidden grid-cols-[1.6fr_auto] items-center gap-4 border-b border-border bg-secondary/20 px-6 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground md:grid">
+                        <div>模型</div>
+                        <div className="text-right">每次价格</div>
+                      </div>
+                    ) : (
+                      <div className="hidden grid-cols-[1.6fr_repeat(4,1fr)_auto] items-center gap-4 border-b border-border bg-secondary/20 px-6 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground md:grid">
+                        <div>模型</div>
+                        <div>输入</div>
+                        <div>输出</div>
+                        <div>缓存读取</div>
+                        <div>缓存写入</div>
+                        <div className="text-right">节省</div>
+                      </div>
+                    )}
 
                     <div className="divide-y divide-border">
-                      {b.rows.map((row) => (
-                        <Row
-                          key={row.model.model_name}
-                          row={row}
-                          tone={v.tone}
-                          savings={v.savings}
-                        />
-                      ))}
+                      {b.rows.map((row) =>
+                        v.perUse ? (
+                          <PerUseRow
+                            key={row.model.model_name}
+                            row={row}
+                            tone={v.tone}
+                          />
+                        ) : (
+                          <Row
+                            key={row.model.model_name}
+                            row={row}
+                            tone={v.tone}
+                            savings={v.savings}
+                          />
+                        ),
+                      )}
                     </div>
                   </div>
                 ))
@@ -218,12 +238,21 @@ export function PricingExplorer({ views }: { views: TabView[] }) {
 
               {/* 计价公式(维护中或无数据时不显示) */}
               {!v.maintenance && v.blocks.length > 0 ? (
-                <PricingFormula
-                  groupName={v.label}
-                  ratio={v.ratio}
-                  tone={v.tone}
-                  sample={v.blocks[0].rows[0]}
-                />
+                v.perUse ? (
+                  <PerUseFormula
+                    groupName={v.label}
+                    ratio={v.ratio}
+                    tone={v.tone}
+                    sample={v.blocks[0].rows[0]}
+                  />
+                ) : (
+                  <PricingFormula
+                    groupName={v.label}
+                    ratio={v.ratio}
+                    tone={v.tone}
+                    sample={v.blocks[0].rows[0]}
+                  />
+                )
               ) : null}
             </div>
           </TabsContent>
@@ -323,6 +352,76 @@ function Row({
   );
 }
 
+function PerUseRow({ row, tone }: { row: PricedRow; tone: GroupTone }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copyModelName() {
+    try {
+      await navigator.clipboard.writeText(row.model.model_name);
+      setCopied(true);
+      toast.success(`已复制模型名:${row.model.model_name}`);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast.error("复制失败，请手动选中文本");
+    }
+  }
+
+  return (
+    <div className="grid grid-cols-1 items-center gap-3 px-6 py-4 transition-colors hover:bg-secondary/30 md:grid-cols-[1.6fr_auto] md:gap-4">
+      <div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={copyModelName}
+            title={copied ? "已复制" : "点击复制模型名"}
+            className="group inline-flex items-center gap-1.5 border border-transparent px-1 py-0.5 font-mono text-sm font-medium text-foreground transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand"
+          >
+            {row.model.model_name}
+            {copied ? (
+              <Check className="size-3 text-brand" />
+            ) : (
+              <Copy className="size-3 text-muted-foreground/60 transition-colors group-hover:text-brand" />
+            )}
+          </button>
+          <span
+            className={cn(
+              "border px-1.5 py-0.5 font-mono text-[10px] font-semibold",
+              ratioBadgeClasses(tone),
+            )}
+            title={`分组倍率 ${row.groupRatio}×:每次基价 $${row.perUse?.usdPerCall} 扣 $${((row.perUse?.usdPerCall ?? 0) * row.groupRatio).toFixed(4)} 美元余额`}
+          >
+            ×{row.groupRatio}
+          </span>
+          {row.badge ? (
+            <span
+              className={cn(
+                "border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider",
+                row.badge === "旗舰" || row.badge === "Codex"
+                  ? "border-brand/40 bg-brand/10 text-brand"
+                  : "border-border bg-secondary text-muted-foreground",
+              )}
+            >
+              {row.badge}
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="md:text-right">
+        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground md:hidden">
+          每次价格
+        </div>
+        <div className="font-mono text-sm font-semibold text-brand">
+          {formatRmb(row.perUse?.rmbPerCall)}
+          <span className="ml-1 text-[10px] font-normal text-muted-foreground">
+            / 次
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Cell({
   label,
   rmb,
@@ -405,6 +504,61 @@ function PricingFormula({
           <span className="text-muted-foreground/60">=</span>
           <span className="font-semibold text-brand">
             {formatRmb(finalRmb)} / 1M tokens
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PerUseFormula({
+  groupName,
+  ratio,
+  tone,
+  sample,
+}: {
+  groupName: string;
+  ratio: number;
+  tone: GroupTone;
+  sample: PricedRow;
+}) {
+  const basePrice = sample.perUse?.usdPerCall ?? 0;
+  const finalRmb = sample.perUse?.rmbPerCall ?? 0;
+  const toneText =
+    tone === "brand"
+      ? "text-brand"
+      : tone === "amber"
+        ? "text-amber-600 dark:text-amber-400"
+        : tone === "sky"
+          ? "text-sky-600 dark:text-sky-400"
+          : "text-foreground";
+
+  return (
+    <div className="border-t border-border bg-secondary/30 px-6 py-4 font-mono text-xs leading-relaxed text-muted-foreground md:text-[13px]">
+      <div className="mb-2 text-[10px] uppercase tracking-wider text-foreground">
+        计价方式 · {groupName}(按次计费)
+      </div>
+      <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
+        <span>每次人民币 = 单次基价 ×</span>
+        <span className="text-foreground">{TOPUP_RATE}</span>
+        <span>(充值比例) ×</span>
+        <span className={toneText}>{ratio}</span>
+        <span>(分组倍率)，不计 token、不与原厂对照</span>
+      </div>
+
+      <div className="mt-3 border-l-2 border-brand/40 pl-3">
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          举例 · {sample.model.model_name}
+        </div>
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-1.5 text-foreground">
+          <span className="text-muted-foreground">${basePrice}</span>
+          <span className="text-muted-foreground/60">×</span>
+          <span className="text-muted-foreground">{TOPUP_RATE}</span>
+          <span className="text-muted-foreground/60">×</span>
+          <span className="text-muted-foreground">{ratio}</span>
+          <span className="text-muted-foreground/60">=</span>
+          <span className="font-semibold text-brand">
+            {formatRmb(finalRmb)} / 次
           </span>
         </div>
       </div>
